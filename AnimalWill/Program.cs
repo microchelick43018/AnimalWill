@@ -36,7 +36,8 @@ namespace AnimalWill
         Wild,
         Scatter,
         Collector,
-        Inner
+        Inner,
+        Blank,
     }
 
     static class SlotInfo
@@ -45,11 +46,12 @@ namespace AnimalWill
         public const int SlotWidth = 5;
         public const int SlotHeight = 4;
 
-        public static Dictionary<int, List<Symbol>> Reels = new Dictionary<int, List<Symbol>>();
+        public static Dictionary<int, List<Symbol>> BGReels = new Dictionary<int, List<Symbol>>();
 
         public static List<Symbol> InnerReel = new List<Symbol>();
         public static Dictionary<int, List<int>> Paylines = new Dictionary<int, List<int>>();
         public static Dictionary<Symbol, int[]> PayTable = new Dictionary<Symbol, int[]>();
+        public static Dictionary<int, List<Symbol>> OuterReels = new Dictionary<int, List<Symbol>>();
 
         public static void ImportInfo()
         {
@@ -64,6 +66,7 @@ namespace AnimalWill
                     ImportPaylines(workbook.Worksheets["Paylines"]);
                     ImportPaytable(workbook.Worksheets["Paytable"]);
                     ImportBGReels(workbook.Worksheets["Base Game Reels"]);
+                    ImportOuterCollectorReels(workbook.Worksheets["Outer Collector Reels"]);
                 }
                 finally
                 {
@@ -77,10 +80,10 @@ namespace AnimalWill
             int i;
             for (i = 0; i < SlotWidth; i++)
             {
-                Reels.Add(i, new List<Symbol>());
+                BGReels.Add(i, new List<Symbol>());
                 for (int j = 4; worksheet.Cells[j, i + 3].Value != null; j++)
                 {
-                    Reels[i].Add(ConvertCellToSymbol(worksheet.Cells[j, i + 3].Value));
+                    BGReels[i].Add(ConvertCellToSymbol(worksheet.Cells[j, i + 3].Value));
                 }
             }
             for (int j = 4; worksheet.Cells[j, i + 3].Value != null; j++)
@@ -129,6 +132,19 @@ namespace AnimalWill
                 }
             }
         }
+
+        private static void ImportOuterCollectorReels(ExcelWorksheet worksheet)
+        {
+            int i;
+            for (i = 0; i < SlotWidth; i++)
+            {
+                OuterReels.Add(i, new List<Symbol>());
+                for (int j = 4; worksheet.Cells[j, i + 3].Value != null; j++)
+                {
+                    OuterReels[i].Add(ConvertCellToSymbol(worksheet.Cells[j, i + 3].Value));
+                }
+            }
+        }
     }
 
     class SlotSimulation
@@ -136,6 +152,7 @@ namespace AnimalWill
         public const int IterationsCount = (int) 10E7;
         public static int CurrentIteration = 0;
         private Symbol[,] _matrix = new Symbol[SlotHeight, SlotWidth];
+        private Symbol[,] _outerMatrix = new Symbol[SlotHeight, SlotWidth];
         private Random _random = new Random();
         private List<int> _stopPositions = new List<int>() { 0, 0, 0, 0, 0 };
         private List<Symbol> _symbolsFromPayline = new List<Symbol>(5);
@@ -145,12 +162,12 @@ namespace AnimalWill
         public void StartSimulation()
         {
             int intervalToUpdateStats = (int) 10E5;
-            for (CurrentIteration = 1; CurrentIteration < IterationsCount + 1; CurrentIteration++)
+            for (CurrentIteration = 0; CurrentIteration < IterationsCount; CurrentIteration++)
             {
                 MakeASpin();
                 if (CurrentIteration % intervalToUpdateStats == 0)
                 {
-                    Console.Clear(); Console.Clear(); Console.Clear();
+                    Console.Clear();
                     ShowStats();
                 }
             }
@@ -165,17 +182,18 @@ namespace AnimalWill
             CalculateStdDev();
             ShowRTPs();
             ShowStdDev();
-            ShowSymbolsRTPs();
-            ShowTotalWinsXIntervals();
+            //ShowSymbolsRTPs();
+            ShowTotalWinsXIntervalsHitFrequency();
         }
 
         private void GenerateNewMatrix()
         {
+            GenerateNewStopPositions(BGReels);
             for (int i = 0; i < SlotWidth; i++)
             {
                 for (int j = 0; j < SlotHeight; j++)
                 {
-                    _matrix[j, i] = Reels[i][(_stopPositions[i] + j) % Reels[i].Count];
+                    _matrix[j, i] = BGReels[i][(_stopPositions[i] + j) % BGReels[i].Count];
                 }
             }
         }
@@ -197,29 +215,61 @@ namespace AnimalWill
 
         private void MakeASpin()
         {
-            GenerateNewStopPositions();
             GenerateNewMatrix();
+            GenerateNewOuterMatrix();
             RealizeInnerSymbols();
+            RealizeOuterSymbols();
 
             int totalWin = 0;
             int payLinesWin = 0;
+            int scattersAmount = 0;
             int scattersWin = 0;
             int collectorsWin = 0;
             int FSRoundWin = 0;
 
             payLinesWin = GetPaylinesWins();
-            scattersWin += GetScatterWin();
+            scattersWin += GetScatterWin(out scattersAmount);
+            if (scattersAmount >= 3)
+            {
+                FSTriggersCount++;
+            }
             //collectorsWin += GetCollectorsWin();
             totalWin = payLinesWin + scattersWin + collectorsWin + FSRoundWin;
             AddWinTo(totalWin, WinsPerTotalSpinCount);
             AddWinXToInterval((double)totalWin / CostToPlay, IntervalTotalWinsX);
         }
 
-        private void GenerateNewStopPositions()
+        private void RealizeOuterSymbols()
+        {
+            for (int i = 1; i < SlotHeight - 1; i++)
+            {
+                for (int j = 1; j < SlotWidth - 1; j++)
+                {
+                    if (_outerMatrix[i, j] == Collector)
+                    {
+                        _matrix[i, j] = Collector;
+                    }
+                }
+            }
+        }
+
+        public void GenerateNewStopPositions(Dictionary<int, List<Symbol>> reelSet)
         {
             for (int i = 0; i < SlotWidth; i++)
             {
-                _stopPositions[i] = _random.Next(0, Reels[i].Count);
+                _stopPositions[i] = _random.Next(0, reelSet[i].Count);
+            }
+        }
+
+        private void GenerateNewOuterMatrix()
+        {
+            GenerateNewStopPositions(OuterReels);
+            for (int i = 1; i < SlotWidth - 1; i++)
+            {
+                for (int j = 0; j < SlotHeight; j++)
+                {
+                    _outerMatrix[j, i] = OuterReels[i][(_stopPositions[i] + j) % OuterReels[i].Count];
+                }
             }
         }
 
@@ -237,11 +287,6 @@ namespace AnimalWill
                 substitutesSymbolsInARow = 0;
                 wildsWin = 0;
                 otherSymbolWin = 0;
-
-                if (_matrix[payline[0], 0] == Wild && _matrix[payline[1], 1] == Wild && _matrix[payline[2], 2] == Scatter)
-                {
-
-                }
 
                 wildsInARow = CountWildsInARow(payline);
                 if (wildsInARow != 0)
@@ -300,6 +345,7 @@ namespace AnimalWill
             }
             return result;
         }
+
         private int CountSubsituteSymbolsInARow(List<int> payline, Symbol symbolToSubstitute)
         {
             int result = 0;
@@ -329,9 +375,9 @@ namespace AnimalWill
             return result;
         }
 
-        private int GetScatterWin()
+        private int GetScatterWin(out int scattersAmount)
         {
-            int scattersAmount = GetSymbolCountFromMatrix(Scatter);
+            scattersAmount = GetSymbolCountFromMatrix(Scatter);
             if (scattersAmount != 0)
             {
                 SymbolsHitsCount[Scatter][scattersAmount - 1]++;
@@ -381,6 +427,8 @@ namespace AnimalWill
         public static List<int> Intervals = new List<int> { -1, 0, 1, 2, 3, 5, 10, 15, 20, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500, 1000 };
         public static Dictionary<int, int> IntervalTotalWinsX = new Dictionary<int, int>();
 
+        public static int FSTriggersCount = 0;
+
         public static double StdDev = 0;
         public static double TotalRTP = 0;
         public static double ScattersRTP = 0;
@@ -409,6 +457,10 @@ namespace AnimalWill
 
         public static void AddWinXToInterval(double winX, Dictionary<int, int> intervals)
         {
+            if (winX == 400)
+            {
+
+            }
             if (winX == 0)
             {
                 intervals[-1]++;
@@ -470,7 +522,7 @@ namespace AnimalWill
             Console.WriteLine($"StdDev = {StdDev}");
         }
 
-        public static void ShowTotalWinsXIntervals()
+        public static void ShowTotalWinsXIntervalsHitFrequency()
         {
             Console.WriteLine("TotalWinsXIntervals %:");
             Console.WriteLine($"0x: {(double) IntervalTotalWinsX.ElementAt(0).Value / CurrentIteration * 100}%");
@@ -493,6 +545,11 @@ namespace AnimalWill
                 }
                 Console.WriteLine();
             }
+        }
+
+        public static void ShowFSTriggerCycle()
+        {
+            Console.WriteLine((double)IterationsCount / FSTriggersCount);
         }
     }
 }
