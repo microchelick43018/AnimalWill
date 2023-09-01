@@ -55,12 +55,12 @@ namespace AnimalWill
 
         public static void ImportInfo()
         {
+            ExcelPackage.LicenseContext = LicenseContext.Commercial;
 
-            using (var package = new ExcelPackage(new FileInfo(@"C:\Users\konstantin.d\source\repos\AnimalWill\AnimalWill\AnimalWillMaths.xlsx")))
+            using (var package = new ExcelPackage(new FileInfo(@"C:\Users\AMD\source\repos\microchelick43018\AnimalWill\AnimalWill\AnimalWillMaths.xlsx")))
             {
                 try
                 {
-                    ExcelPackage.LicenseContext = LicenseContext.Commercial;
                     var workbook = package.Workbook;
                     //var worksheet = workbook.Worksheets[0];
                     ImportPaylines(workbook.Worksheets["Paylines"]);
@@ -180,6 +180,7 @@ namespace AnimalWill
             CalculateTotalRTP();
             CalculateScattersRTP();
             CalculateStdDev();
+            ShowFSTriggerCycle();
             ShowRTPs();
             ShowStdDev();
             //ShowSymbolsRTPs();
@@ -228,12 +229,16 @@ namespace AnimalWill
             int FSRoundWin = 0;
 
             payLinesWin = GetPaylinesWins();
-            scattersWin += GetScatterWin(out scattersAmount);
-            if (scattersAmount >= 3)
+            scattersWin = GetScatterWin(out scattersAmount);
+            if (scattersAmount == 3)
             {
                 FSTriggersCount++;
             }
-            //collectorsWin += GetCollectorsWin();
+            if (CollectFeatureTriggersCount == 3)
+            {
+
+            }
+            collectorsWin = GetCollectorsWin(out int collectorsAmount);
             totalWin = payLinesWin + scattersWin + collectorsWin + FSRoundWin;
             AddWinTo(totalWin, WinsPerTotalSpinCount);
             AddWinXToInterval((double)totalWin / CostToPlay, IntervalTotalWinsX);
@@ -378,7 +383,7 @@ namespace AnimalWill
         private int GetScatterWin(out int scattersAmount)
         {
             scattersAmount = GetSymbolCountFromMatrix(Scatter);
-            if (scattersAmount != 0)
+            if (scattersAmount == 3)
             {
                 SymbolsHitsCount[Scatter][scattersAmount - 1]++;
                 return PayTable[Scatter][scattersAmount - 1];
@@ -389,11 +394,12 @@ namespace AnimalWill
             }
         }
 
-        private int GetCollectorsWin()
+        private int GetCollectorsWin(out int collectorsAmount)
         {
+
             Symbol animalFromWheel = GetAnimalFromCollectorsWheel();
-            int animalsCount = GetSymbolCountFromMatrix(animalFromWheel);
-            return PayTable[Collector][animalsCount - 1];
+            collectorsAmount = GetSymbolCountFromMatrix(animalFromWheel);
+            return 0; //PayTable[Collector][animalsCount - 1];
         }
 
         private Symbol GetAnimalFromCollectorsWheel()
@@ -428,13 +434,13 @@ namespace AnimalWill
         public static Dictionary<int, int> IntervalTotalWinsX = new Dictionary<int, int>();
 
         public static int FSTriggersCount = 0;
+        public static int CollectFeatureTriggersCount = 0;
 
         public static double StdDev = 0;
         public static double TotalRTP = 0;
         public static double ScattersRTP = 0;
         public static double CollectorsRTP = 0;
         public static double ConfidenceInterval = 0;
-
         static SlotStats()
         {
             foreach (var interval in Intervals)
@@ -549,7 +555,12 @@ namespace AnimalWill
 
         public static void ShowFSTriggerCycle()
         {
-            Console.WriteLine((double)IterationsCount / FSTriggersCount);
+            Console.WriteLine($"FS Cycle = {Math.Round((double)CurrentIteration / FSTriggersCount, 2)}");
+        }
+
+        public static void ShowCFTriggerCycle()
+        {
+            Console.WriteLine($"Collect Feature Cycle = {Math.Round((double)CurrentIteration / CollectFeatureTriggersCount, 2)}");
         }
     }
 }
