@@ -145,6 +145,11 @@ namespace AnimalWill
                 }
             }
         }
+
+        private static void ImportChanceToUseOuterReelsDuringBG()
+        {
+
+        }
     }
 
     class SlotSimulation
@@ -250,9 +255,9 @@ namespace AnimalWill
             {
                 for (int j = 1; j < SlotWidth - 1; j++)
                 {
-                    if (_outerMatrix[i, j] == Collector)
+                    if (_outerMatrix[i, j] != Blank)
                     {
-                        _matrix[i, j] = Collector;
+                        _matrix[i, j] = _outerMatrix[i, j];
                     }
                 }
             }
