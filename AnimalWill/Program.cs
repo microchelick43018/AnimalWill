@@ -42,7 +42,7 @@ namespace AnimalWill
 
     static class SlotInfo
     {
-        public const double CostToPlay = 50;
+        public const double CostToPlay = 75;
         public const int SlotWidth = 5;
         public const int SlotHeight = 4;
 
@@ -52,12 +52,13 @@ namespace AnimalWill
         public static Dictionary<int, List<int>> Paylines = new Dictionary<int, List<int>>();
         public static Dictionary<Symbol, int[]> PayTable = new Dictionary<Symbol, int[]>();
         public static Dictionary<int, List<Symbol>> OuterReels = new Dictionary<int, List<Symbol>>();
+        public static double ChanceToUseOuterReelsDuringBG = 0;
 
         public static void ImportInfo()
         {
             ExcelPackage.LicenseContext = LicenseContext.Commercial;
 
-            using (var package = new ExcelPackage(new FileInfo(@"C:\Users\AMD\source\repos\microchelick43018\AnimalWill\AnimalWill\AnimalWillMaths.xlsx")))
+            using (var package = new ExcelPackage(new FileInfo(@"C:\Users\konstantin.d\source\repos\AnimalWill\AnimalWill\AnimalWillMaths.xlsx")))
             {
                 try
                 {
@@ -67,6 +68,7 @@ namespace AnimalWill
                     ImportPaytable(workbook.Worksheets["Paytable"]);
                     ImportBGReels(workbook.Worksheets["Base Game Reels"]);
                     ImportOuterCollectorReels(workbook.Worksheets["Outer Collector Reels"]);
+                    ImportChanceToUseOuterReelsDuringBG(workbook.Worksheets["Outer Reels Weights"]);
                 }
                 finally
                 {
@@ -146,9 +148,9 @@ namespace AnimalWill
             }
         }
 
-        private static void ImportChanceToUseOuterReelsDuringBG()
+        private static void ImportChanceToUseOuterReelsDuringBG(ExcelWorksheet worksheet)
         {
-
+            ChanceToUseOuterReelsDuringBG = (double) worksheet.Cells[3, 3].Value / (double) worksheet.Cells[3, 5].Value;
         }
     }
 
@@ -186,6 +188,7 @@ namespace AnimalWill
             CalculateScattersRTP();
             CalculateStdDev();
             ShowFSTriggerCycle();
+            ShowCFTriggerCycle();
             ShowRTPs();
             ShowStdDev();
             //ShowSymbolsRTPs();
@@ -222,9 +225,7 @@ namespace AnimalWill
         private void MakeASpin()
         {
             GenerateNewMatrix();
-            GenerateNewOuterMatrix();
             RealizeInnerSymbols();
-            RealizeOuterSymbols();
 
             int totalWin = 0;
             int payLinesWin = 0;
@@ -233,15 +234,21 @@ namespace AnimalWill
             int collectorsWin = 0;
             int FSRoundWin = 0;
 
+            if (1 >= _random.NextDouble())
+            {
+                GenerateNewOuterMatrix();
+                RealizeOuterSymbols();
+                if (GetSymbolCountFromMatrix(Collector) != 0)
+                {
+                    CollectFeatureTriggersCount++;
+                    TurnCollectorsIntoWilds();
+                }
+            }
             payLinesWin = GetPaylinesWins();
             scattersWin = GetScatterWin(out scattersAmount);
             if (scattersAmount == 3)
             {
                 FSTriggersCount++;
-            }
-            if (CollectFeatureTriggersCount == 3)
-            {
-
             }
             collectorsWin = GetCollectorsWin(out int collectorsAmount);
             totalWin = payLinesWin + scattersWin + collectorsWin + FSRoundWin;
@@ -249,9 +256,23 @@ namespace AnimalWill
             AddWinXToInterval((double)totalWin / CostToPlay, IntervalTotalWinsX);
         }
 
-        private void RealizeOuterSymbols()
+        private void TurnCollectorsIntoWilds()
         {
             for (int i = 1; i < SlotHeight - 1; i++)
+            {
+                for (int j = 1; j < SlotWidth - 1; j++)
+                {
+                    if (_matrix[i, j] == Collector)
+                    {
+                        _matrix[i, j] = Wild;
+                    }
+                }
+            }
+        }
+
+        private void RealizeOuterSymbols()
+        {
+            for (int i = 0; i < SlotHeight; i++)
             {
                 for (int j = 1; j < SlotWidth - 1; j++)
                 {
@@ -274,7 +295,7 @@ namespace AnimalWill
         private void GenerateNewOuterMatrix()
         {
             GenerateNewStopPositions(OuterReels);
-            for (int i = 1; i < SlotWidth - 1; i++)
+            for (int i = 0; i < SlotWidth; i++)
             {
                 for (int j = 0; j < SlotHeight; j++)
                 {
