@@ -7,6 +7,7 @@ using static AnimalWill.SlotStats;
 using System.Linq;
 using OfficeOpenXml;
 using System.IO;
+using System.Reflection;
 
 namespace AnimalWill
 {
@@ -42,16 +43,18 @@ namespace AnimalWill
 
     static class SlotInfo
     {
-        public const double CostToPlay = 75;
+        public const double CostToPlay = 50;
         public const int SlotWidth = 5;
         public const int SlotHeight = 4;
 
-        public static Dictionary<int, List<Symbol>> BGReels = new Dictionary<int, List<Symbol>>();
+        public static List<Dictionary<int, List<Symbol>>> BGReelsSets = new List<Dictionary<int, List<Symbol>>>();
 
         public static List<Symbol> InnerReel = new List<Symbol>();
         public static Dictionary<int, List<int>> Paylines = new Dictionary<int, List<int>>();
         public static Dictionary<Symbol, int[]> PayTable = new Dictionary<Symbol, int[]>();
         public static Dictionary<int, List<Symbol>> OuterReels = new Dictionary<int, List<Symbol>>();
+        public static List<double> BaseGameReelsWeights = new List<double>();
+        public static Dictionary<int, int> CollectorsPayTable = new Dictionary<int, int>();
         public static double ChanceToUseOuterReelsDuringBG = 0;
 
         public static void ImportInfo()
@@ -63,12 +66,14 @@ namespace AnimalWill
                 try
                 {
                     var workbook = package.Workbook;
-                    //var worksheet = workbook.Worksheets[0];
                     ImportPaylines(workbook.Worksheets["Paylines"]);
                     ImportPaytable(workbook.Worksheets["Paytable"]);
-                    ImportBGReels(workbook.Worksheets["Base Game Reels"]);
+                    ImportBGReels(workbook);
+                    ImportInnerReels(workbook.Worksheets["Base Game Reels 1"]);
                     ImportOuterCollectorReels(workbook.Worksheets["Outer Collector Reels"]);
                     ImportChanceToUseOuterReelsDuringBG(workbook.Worksheets["Outer Reels Weights"]);
+                    ImportBGReelsWeights(workbook.Worksheets["Base Game Reel Weights"]);
+                    ImportCollectorsPayTable(workbook.Worksheets["Collect Feature Paytable"]);
                 }
                 finally
                 {
@@ -77,20 +82,47 @@ namespace AnimalWill
             }
         }
 
-        private static void ImportBGReels(ExcelWorksheet worksheet)
+        private static void ImportCollectorsPayTable(ExcelWorksheet worksheet)
         {
-            int i;
-            for (i = 0; i < SlotWidth; i++)
+            for (int i = 0; i <= 19; i++)
             {
-                BGReels.Add(i, new List<Symbol>());
-                for (int j = 4; worksheet.Cells[j, i + 3].Value != null; j++)
+                CollectorsPayTable.Add(i, Convert.ToInt32(worksheet.Cells[3 + i, 3].Value));
+                CollectorsAmountHits.Add(Convert.ToInt32(worksheet.Cells[3 + i, 2].Value), 0);
+            }
+        }
+
+        private static void ImportBGReelsWeights(ExcelWorksheet worksheet)
+        {
+            BaseGameReelsWeights.Add((double)worksheet.Cells[2, 3].Value / (double)worksheet.Cells[4, 3].Value);
+            BaseGameReelsWeights.Add((double)worksheet.Cells[3, 3].Value / (double)worksheet.Cells[4, 3].Value);
+        }
+
+        private static void ImportBGReels(ExcelWorkbook workbook)
+        {
+            string worksheetName = "Base Game Reels ";
+            ExcelWorksheet worksheet;
+            for (int worksheetNumber = 1; worksheetNumber <= 2; worksheetNumber++)
+            {
+                worksheet = workbook.Worksheets[worksheetName + worksheetNumber.ToString()];
+                int i;
+                BGReelsSets.Add(new Dictionary<int, List<Symbol>>());
+                for (i = 0; i < SlotWidth; i++)
                 {
-                    BGReels[i].Add(ConvertCellToSymbol(worksheet.Cells[j, i + 3].Value));
+                    BGReelsSets[worksheetNumber - 1].Add(i, new List<Symbol>());
+                    for (int j = 4; worksheet.Cells[j, i + 3].Value != null; j++)
+                    {
+                        BGReelsSets[worksheetNumber - 1][i].Add(ConvertCellToSymbol(worksheet.Cells[j, i + 3].Value));
+                    }
                 }
             }
-            for (int j = 4; worksheet.Cells[j, i + 3].Value != null; j++)
+            
+        }
+
+        private static void ImportInnerReels(ExcelWorksheet worksheet)
+        {
+            for (int j = 4; worksheet.Cells[j, 8].Value != null; j++)
             {
-                InnerReel.Add(ConvertCellToSymbol(worksheet.Cells[j, i + 3].Value));
+                InnerReel.Add(ConvertCellToSymbol(worksheet.Cells[j, 8].Value));
             }
         }
 
@@ -158,6 +190,7 @@ namespace AnimalWill
     {
         public const int IterationsCount = (int) 10E7;
         public static int CurrentIteration = 0;
+        public static Dictionary<int, List<Symbol>> CurrentBGReels = new Dictionary<int, List<Symbol>>();
         private Symbol[,] _matrix = new Symbol[SlotHeight, SlotWidth];
         private Symbol[,] _outerMatrix = new Symbol[SlotHeight, SlotWidth];
         private Random _random = new Random();
@@ -175,6 +208,7 @@ namespace AnimalWill
                 if (CurrentIteration % intervalToUpdateStats == 0)
                 {
                     Console.Clear();
+                    Console.WriteLine("\x1b[3J");
                     ShowStats();
                 }
             }
@@ -187,22 +221,25 @@ namespace AnimalWill
             CalculateTotalRTP();
             CalculateScattersRTP();
             CalculateStdDev();
+            CalculateCollectorsRTP();
             ShowFSTriggerCycle();
             ShowCFTriggerCycle();
             ShowRTPs();
             ShowStdDev();
+            ShowCollectorsHits();
+            ShowAvgCollectorFeatureWin();
             //ShowSymbolsRTPs();
             ShowTotalWinsXIntervalsHitFrequency();
         }
 
         private void GenerateNewMatrix()
         {
-            GenerateNewStopPositions(BGReels);
+            GenerateNewStopPositions(CurrentBGReels);
             for (int i = 0; i < SlotWidth; i++)
             {
                 for (int j = 0; j < SlotHeight; j++)
                 {
-                    _matrix[j, i] = BGReels[i][(_stopPositions[i] + j) % BGReels[i].Count];
+                    _matrix[j, i] = CurrentBGReels[i][(_stopPositions[i] + j) % CurrentBGReels[i].Count];
                 }
             }
         }
@@ -224,6 +261,7 @@ namespace AnimalWill
 
         private void MakeASpin()
         {
+            ChooseBGReelSet();
             GenerateNewMatrix();
             RealizeInnerSymbols();
 
@@ -234,7 +272,7 @@ namespace AnimalWill
             int collectorsWin = 0;
             int FSRoundWin = 0;
 
-            if (1 >= _random.NextDouble())
+            if (ChanceToUseOuterReelsDuringBG >= _random.NextDouble())
             {
                 GenerateNewOuterMatrix();
                 RealizeOuterSymbols();
@@ -242,6 +280,8 @@ namespace AnimalWill
                 {
                     CollectFeatureTriggersCount++;
                     TurnCollectorsIntoWilds();
+                    collectorsWin = GetCollectorsWin(out int animalsAmount);
+                    CollectorsAmountHits[animalsAmount]++;
                 }
             }
             payLinesWin = GetPaylinesWins();
@@ -250,10 +290,22 @@ namespace AnimalWill
             {
                 FSTriggersCount++;
             }
-            collectorsWin = GetCollectorsWin(out int collectorsAmount);
             totalWin = payLinesWin + scattersWin + collectorsWin + FSRoundWin;
             AddWinTo(totalWin, WinsPerTotalSpinCount);
-            AddWinXToInterval((double)totalWin / CostToPlay, IntervalTotalWinsX);
+            AddWinXToInterval(totalWin / CostToPlay, IntervalTotalWinsX);
+        }
+
+        private void ChooseBGReelSet()
+        {
+            int i = 0;
+            double randomNumber = _random.NextDouble();
+            double sumOfWeightsOfWrongReelSets = BaseGameReelsWeights[0];
+            while (randomNumber > sumOfWeightsOfWrongReelSets)
+            {
+                i++;
+                sumOfWeightsOfWrongReelSets += BaseGameReelsWeights[i];
+            }
+            CurrentBGReels = BGReelsSets[i]; 
         }
 
         private void TurnCollectorsIntoWilds()
@@ -320,8 +372,10 @@ namespace AnimalWill
                 otherSymbolWin = 0;
 
                 wildsInARow = CountWildsInARow(payline);
+
                 if (wildsInARow != 0)
                     wildsWin = PayTable[Wild][wildsInARow - 1];
+
                 if (TryGetWinSymbolExceptWild(payline, out winSymbol) == false)
                 {
                     winSymbol = Wild;
@@ -420,12 +474,11 @@ namespace AnimalWill
             }
         }
 
-        private int GetCollectorsWin(out int collectorsAmount)
+        private int GetCollectorsWin(out int animalsAmount)
         {
-
             Symbol animalFromWheel = GetAnimalFromCollectorsWheel();
-            collectorsAmount = GetSymbolCountFromMatrix(animalFromWheel);
-            return 0; //PayTable[Collector][animalsCount - 1];
+            animalsAmount = GetSymbolCountFromMatrix(animalFromWheel);
+            return CollectorsPayTable[animalsAmount];
         }
 
         private Symbol GetAnimalFromCollectorsWheel()
@@ -458,6 +511,9 @@ namespace AnimalWill
         public static Dictionary<int, int> WinsPer1FSCount = new Dictionary<int, int>();
         public static List<int> Intervals = new List<int> { -1, 0, 1, 2, 3, 5, 10, 15, 20, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500, 1000 };
         public static Dictionary<int, int> IntervalTotalWinsX = new Dictionary<int, int>();
+
+        public static Dictionary<int, int> CollectorsAmountHits = new Dictionary<int, int>();
+
 
         public static int FSTriggersCount = 0;
         public static int CollectFeatureTriggersCount = 0;
@@ -542,11 +598,21 @@ namespace AnimalWill
             ConfidenceInterval = TotalRTP * StdDev * 1.95 / Math.Pow(ConfidenceInterval, 1 / 2); //95% CI
         }
 
+        public static void CalculateCollectorsRTP()
+        {
+            CollectorsRTP = 0;
+            foreach (var item in CollectorsAmountHits)
+            {
+                CollectorsRTP += item.Value * item.Key / CostToPlay / CurrentIteration;
+            }
+        }
+
         public static void ShowRTPs()
         {
             Console.WriteLine($"Total RTP = {Math.Round(TotalRTP, 4) * 100}%");
             Console.WriteLine($"Scatter RTP = {Math.Round(ScattersRTP, 4) * 100}%");
             Console.WriteLine($"Paylines only RTP = {Math.Round(TotalRTP - ScattersRTP, 4) * 100}%");
+            Console.WriteLine($"Collectors RTP = {Math.Round(CollectorsRTP, 4) * 100}%");
         }
 
         public static void ShowStdDev()
@@ -556,13 +622,13 @@ namespace AnimalWill
 
         public static void ShowTotalWinsXIntervalsHitFrequency()
         {
-            Console.WriteLine("TotalWinsXIntervals %:");
-            Console.WriteLine($"0x: {(double) IntervalTotalWinsX.ElementAt(0).Value / CurrentIteration * 100}%");
+            Console.WriteLine("Total WinsX Intervals Hit Rate:");
+            Console.WriteLine($"0x: {1 / ((double) IntervalTotalWinsX.ElementAt(0).Value / CurrentIteration)}");
             for (int i = 1; i < IntervalTotalWinsX.Count - 1; i++)
             {
-                Console.WriteLine($"{IntervalTotalWinsX.ElementAt(i).Key}x - {IntervalTotalWinsX.ElementAt(i + 1).Key}x: {(double) IntervalTotalWinsX.ElementAt(i).Value / CurrentIteration * 100}%");
+                Console.WriteLine($"{IntervalTotalWinsX.ElementAt(i).Key}x - {IntervalTotalWinsX.ElementAt(i + 1).Key}x: {1 / ((double) IntervalTotalWinsX.ElementAt(i).Value / CurrentIteration)}");
             }
-            Console.WriteLine($" > {IntervalTotalWinsX.ElementAt(IntervalTotalWinsX.Count - 1).Key}x: {(double) IntervalTotalWinsX.ElementAt(IntervalTotalWinsX.Count - 1).Value / CurrentIteration * 100}%");
+            Console.WriteLine($" > {IntervalTotalWinsX.ElementAt(IntervalTotalWinsX.Count - 1).Key}x: {1 / ((double) IntervalTotalWinsX.ElementAt(IntervalTotalWinsX.Count - 1).Value / CurrentIteration)}");
         }
 
         public static void ShowSymbolsRTPs()
@@ -587,6 +653,26 @@ namespace AnimalWill
         public static void ShowCFTriggerCycle()
         {
             Console.WriteLine($"Collect Feature Cycle = {Math.Round((double)CurrentIteration / CollectFeatureTriggersCount, 2)}");
+        }
+
+        public static void ShowCollectorsHits()
+        {
+            Console.WriteLine("Amount - Hits - Value (%)");
+            foreach (var item in CollectorsAmountHits)
+            {
+                Console.WriteLine($"{item.Key} - {item.Value} - {CollectorsPayTable[item.Key]} ({Math.Round((double)item.Value / CollectFeatureTriggersCount, 6) * 100}%)");
+            }
+        }
+
+        public static void ShowAvgCollectorFeatureWin()
+        {
+            double avgWin = 0;
+            foreach (var item in CollectorsAmountHits)
+            {
+                avgWin += (double) item.Value * CollectorsPayTable[item.Key] / CostToPlay;
+            }
+            avgWin /= CollectFeatureTriggersCount;
+            Console.WriteLine($"Collect Feature Avg Win = {avgWin}x");
         }
     }
 }
