@@ -30,6 +30,7 @@ namespace AnimalWill
         public static List<double> BaseGameReelsWeights = new List<double>();
         public static Dictionary<int, int> CollectorsPayTable = new Dictionary<int, int>();
         public static double ChanceToUseOuterReelsDuringBG = 0;
+        public static Dictionary<int, int> LeopardFeatureWinsWeights = new Dictionary<int, int>();
 
         public static void ImportInfo()
         {
@@ -51,10 +52,26 @@ namespace AnimalWill
                     ImportWeightsForWheel(workbook.Worksheets["Formula of Animal Wheel Weights"]);
                     ImportLionFeatureReels(workbook.Worksheets["Lion Feature Reels"]);
                     ImportLionFeatureInfo(workbook.Worksheets["Lion Feature Info"]);
+                    ImportLeopardFeatureWieghts(workbook.Worksheets["Leopard Feature Weights"]);
                 }
                 finally
                 {
                     package.Dispose();
+                }
+            }
+        }
+
+        private static void ImportLeopardFeatureWieghts(ExcelWorksheet worksheet)
+        {
+            for (int i = 0; worksheet.Cells[13 + i, 3].Value != null; i++)
+            {
+                if (LeopardFeatureWinsWeights.ContainsKey(Convert.ToInt32(worksheet.Cells[13 + i, 3].Value)))
+                {
+                    LeopardFeatureWinsWeights[Convert.ToInt32(worksheet.Cells[13 + i, 3].Value)] += Convert.ToInt32(worksheet.Cells[13 + i, 5].Value);
+                }
+                else
+                {
+                    LeopardFeatureWinsWeights.Add(Convert.ToInt32(worksheet.Cells[13 + i, 3].Value), Convert.ToInt32(worksheet.Cells[13 + i, 5].Value));
                 }
             }
         }
@@ -83,7 +100,7 @@ namespace AnimalWill
 
         private static void ImportCollectorsPayTable(ExcelWorksheet worksheet)
         {
-            for (int i = 0; i <= 19; i++)
+            for (int i = 0; i <= 20; i++)
             {
                 CollectorsPayTable.Add(i, Convert.ToInt32(worksheet.Cells[3 + i, 3].Value));
                 CollectorsAmountHits.Add(Convert.ToInt32(worksheet.Cells[3 + i, 2].Value), 0);

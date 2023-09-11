@@ -35,18 +35,18 @@ namespace AnimalWill
         private static void MakeASpin()
         {
             GenerateNewMatrix(LionFeatureReels);
-            RealizeInnerSymbols();
+            RealizeInnerSymbolsInLionFeature();
 
             RealizeWildSymbols();
 
-            int totalWin = 0;
+            int totalWinPerSpin = 0;
             int payLinesWin = 0;
 
             payLinesWin = GetPaylinesWins(Matrix);
-            totalWin = payLinesWin;
-            AddWinTo(totalWin, WinsPerLionSpin);
-            AddWinXToInterval(totalWin / CostToPlay, IntervalLionFeatureSpinWinsX);
-            TotalWinPerRound += totalWin;
+            totalWinPerSpin = payLinesWin;
+            AddWinTo(totalWinPerSpin, WinsPerFeatureSpin[Lion]);
+            AddWinXToInterval(totalWinPerSpin / CostToPlay, IntervalFeaturesSpinWinsX[Lion]);
+            TotalWinPerRound += totalWinPerSpin;
         }
 
         private static void RealizeWildSymbols()
@@ -66,6 +66,25 @@ namespace AnimalWill
         private static void SelectWildSymbol()
         {
             _selectedSymbol = TableWeightsSelector.GetRandomObjectFromTableWithWeights(SymbolsToWildsWeights);
+        }
+
+        private static void RealizeInnerSymbolsInLionFeature()
+        {
+            Symbol symbolInsteadInner = InnerReel[Rand.Next(0, InnerReel.Count)];
+            while ((int) symbolInsteadInner <= 4)
+            {
+                symbolInsteadInner = InnerReel[Rand.Next(0, InnerReel.Count)];
+            }
+            for (int i = 0; i < SlotHeight; i++)
+            {
+                for (int j = 0; j < SlotWidth; j++)
+                {
+                    if (Matrix[i, j] == Inner)
+                    {
+                        Matrix[i, j] = symbolInsteadInner;
+                    }
+                }
+            }
         }
     }
 }
