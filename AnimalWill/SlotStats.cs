@@ -167,6 +167,14 @@ namespace AnimalWill
         public static void ShowStdDev()
         {
             Console.WriteLine($"StdDev = {StdDev}");
+            double stdDev2 = 0;
+            foreach (var item in WinsPerTotalSpinCount)
+            {
+                stdDev2 += (item.Key / CostToPlay * item.Key / CostToPlay) * (double) item.Value / CurrentIteration;
+            }
+            stdDev2 -= TotalRTP * TotalRTP;
+            stdDev2 = Math.Sqrt(stdDev2);
+            Console.WriteLine($"StdDev2 = {stdDev2}");
         }
 
         public static void ShowIntervalsHitRate(Dictionary<int, int> intervalToShow, string intervalName)
@@ -185,6 +193,13 @@ namespace AnimalWill
                     $"({(((intervalToShow.ElementAt(i).Key + intervalToShow.ElementAt(i + 1).Key) / 2.0f) * (double)intervalToShow.ElementAt(i).Value) / sumOfTheseSpins}%)");
             }
             Console.WriteLine($" > {intervalToShow.ElementAt(intervalToShow.Count - 1).Key}x: {1 / ((double)intervalToShow.ElementAt(IntervalTotalWinsX.Count - 1).Value / sumOfTheseSpins)}");
+        }
+
+        public static int GetWinFromTheInterval()
+        {
+            int result = 0;
+
+            return result;
         }
 
         public static void ShowSymbolsRTPs()
@@ -277,6 +292,23 @@ namespace AnimalWill
                 }
                 FeatureRTP /= CurrentIteration;
                 Console.WriteLine($"{animal} Feature RTP = {Math.Round(FeatureRTP, 4) * 100}%");
+            }
+        }
+
+        public static void ShowFeaturesStdDevs()
+        {
+            double stdDev = 0;
+            foreach (Symbol animal in FeaturesSelectedCount.Keys)
+            {
+                stdDev = 0;
+                foreach (var item in WinsPerFeatureRound[animal])
+                {
+                    stdDev += item.Value * (item.Key * item.Key / CostToPlay / CostToPlay);
+                }
+                stdDev /= CurrentIteration;
+                stdDev -= TotalRTP * TotalRTP;
+                stdDev = Math.Sqrt(stdDev);
+                Console.WriteLine($"{animal} Feature StdDev = {Math.Round(stdDev, 6)}");
             }
         }
 

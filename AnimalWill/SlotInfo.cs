@@ -45,18 +45,44 @@ namespace AnimalWill
                     ImportPaytable(workbook.Worksheets["Paytable"]);
                     ImportBGReels(workbook);
                     ImportInnerReels(workbook.Worksheets["Base Game Reels 1"]);
+                    ImportBGReelsWeights(workbook.Worksheets["Base Game Reel Weights"]);
+
                     ImportOuterCollectorReels(workbook.Worksheets["Outer Collector Reels"]);
                     ImportChanceToUseOuterReelsDuringBG(workbook.Worksheets["Outer Reels Weights"]);
-                    ImportBGReelsWeights(workbook.Worksheets["Base Game Reel Weights"]);
                     ImportCollectorsPayTable(workbook.Worksheets["Collect Feature Paytable"]);
                     ImportWeightsForWheel(workbook.Worksheets["Formula of Animal Wheel Weights"]);
+
                     ImportLionFeatureReels(workbook.Worksheets["Lion Feature Reels"]);
                     ImportLionFeatureInfo(workbook.Worksheets["Lion Feature Info"]);
+
                     ImportLeopardFeatureWieghts(workbook.Worksheets["Leopard Feature Weights"]);
+
+                    ImportWaterBuffaloReels(workbook.Worksheets["Buffalo Feature Reel Set1"], WaterBuffaloFeature.WaterBuffaloFeatureReels1stSpin);
+                    ImportWaterBuffaloReels(workbook.Worksheets["Buffalo Feature Reel Set2"], WaterBuffaloFeature.WaterBuffaloFeatureReels2ndSpin);
+                    ImportWaterBuffaloReels(workbook.Worksheets["Buffalo Feature Reel Set3"], WaterBuffaloFeature.WaterBuffaloFeatureReels4thSpin);
+                    ImportWaterBuffaloSpinsCount(workbook.Worksheets["Buffalo Feature Info"]);
                 }
                 finally
                 {
                     package.Dispose();
+                }
+            }
+        }
+
+        private static void ImportWaterBuffaloSpinsCount(ExcelWorksheet worksheet)
+        {
+            WaterBuffaloFeature.SpinsCount = Convert.ToInt32(worksheet.Cells["D2"].Value);
+        }
+
+        private static void ImportWaterBuffaloReels(ExcelWorksheet worksheet, Dictionary<int, List<Symbol>> reelSet)
+        {
+            int i;
+            for (i = 0; i < SlotWidth; i++)
+            {
+                reelSet.Add(i, new List<Symbol>());
+                for (int j = 4; worksheet.Cells[j, i + 3].Value != null; j++)
+                {
+                    reelSet[i].Add(ConvertCellToSymbol(worksheet.Cells[j, i + 3].Value));
                 }
             }
         }

@@ -94,13 +94,16 @@ namespace AnimalWill
             Console.WriteLine();
             ShowFeaturesRTPs();
             Console.WriteLine();
-            ShowAvgWinPerLionSpin();
+            ShowFeaturesStdDevs();
+            Console.WriteLine();
             ShowIntervalsHitRate(IntervalTotalWinsX, "Total Wins");
             Console.WriteLine();
-            ShowIntervalsHitRate(IntervalFeaturesSpinWinsX[Lion], "Lion Feature Wins Per LF Spin");
-            Console.WriteLine();
-            ShowIntervalsHitRate(IntervalFeaturesRoundWinsX[Lion], "Lion Feature Wins Per LF Round");
-            ShowIntervalsHitRate(IntervalFeaturesSpinWinsX[Leopard], "Leopard Feature Wins Per LF Round");
+            foreach (var item in _animalsMeters.Keys)
+            {
+                Console.WriteLine();
+                ShowIntervalsHitRate(IntervalFeaturesRoundWinsX[item], $"{item} Feature Wins Per Round");
+                Console.WriteLine();
+            }
         }
 
         public static void GenerateNewMatrix(Dictionary<int, List<Symbol>> reelSet)
@@ -160,6 +163,10 @@ namespace AnimalWill
                 else if (selectedSymbol == Leopard)
                 {
                     LeopardFeature.RealizeFeature(out FSRoundWin);
+                }
+                else if (selectedSymbol == WaterBuffalo)
+                {
+                    WaterBuffaloFeature.StartFeature(out FSRoundWin);
                 }
                 AddWinXToInterval(FSRoundWin / CostToPlay, IntervalFeaturesRoundWinsX[selectedSymbol]);
                 AddWinTo(FSRoundWin, WinsPerFeatureRound[selectedSymbol]);
