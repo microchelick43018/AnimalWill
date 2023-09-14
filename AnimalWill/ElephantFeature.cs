@@ -10,12 +10,13 @@ using OfficeOpenXml;
 using System.IO;
 using System.Reflection;
 
+
 namespace AnimalWill
 {
-    public static class LionFeature
+    public static class ElephantFeature
     {
-        public static Dictionary<int, List<Symbol>> LionFeatureReels = new Dictionary<int, List<Symbol>>();
-        public static List<Symbol> LionFeatureInnerReels = new List<Symbol>();
+        public static Dictionary<int, List<Symbol>> ElephantFeatureReels = new Dictionary<int, List<Symbol>>();
+        public static List<Symbol> ElephantFeatureInnerReels = new List<Symbol>();
         public static Dictionary<Symbol, int> SymbolsToWildsWeights = new Dictionary<Symbol, int>();
         public static int LionSpinsCount;
         public static int TotalWinPerRound = 0;
@@ -35,7 +36,7 @@ namespace AnimalWill
 
         private static void MakeASpin()
         {
-            GenerateNewMatrix(LionFeatureReels);
+            GenerateNewMatrix(ElephantFeatureReels);
             RealizeInnerSymbolsInLionFeature();
 
             RealizeWildSymbols();
@@ -45,8 +46,8 @@ namespace AnimalWill
 
             payLinesWin = GetPaylinesWins(Matrix);
             totalWinPerSpin = payLinesWin;
-            AddWinTo(totalWinPerSpin, WinsPerFeatureSpin[Lion]);
-            AddWinXToInterval(totalWinPerSpin / CostToPlay, IntervalFeaturesSpinWinsX[Lion]);
+            AddWinTo(totalWinPerSpin, WinsPerFeatureSpin[Elephant]);
+            AddWinXToInterval(totalWinPerSpin / CostToPlay, IntervalFeaturesSpinWinsX[Elephant]);
             TotalWinPerRound += totalWinPerSpin;
         }
 
@@ -71,7 +72,7 @@ namespace AnimalWill
 
         private static void RealizeInnerSymbolsInLionFeature()
         {
-            Symbol symbolInsteadInner = LionFeatureInnerReels[Rand.Next(0, LionFeatureInnerReels.Count)];
+            Symbol symbolInsteadInner = ElephantFeatureInnerReels[Rand.Next(0, ElephantFeatureInnerReels.Count)];
             for (int i = 0; i < SlotHeight; i++)
             {
                 for (int j = 0; j < SlotWidth; j++)

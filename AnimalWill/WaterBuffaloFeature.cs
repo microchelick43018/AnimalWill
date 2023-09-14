@@ -57,19 +57,5 @@ namespace AnimalWill
             AddWinXToInterval(totalWinPerSpin / CostToPlay, IntervalFeaturesSpinWinsX[WaterBuffalo]);
             TotalWinPerRound += totalWinPerSpin;
         }
-
-        private static void RealizeWildSymbols()
-        {
-            for (int i = 0; i < SlotWidth; i++)
-            {
-                for (int j = 0; j < SlotHeight; j++)
-                {
-                    if (Matrix[j, i] == _selectedSymbol)
-                    {
-                        Matrix[j, i] = Wild;
-                    }
-                }
-            }
-        }
     }
 }

@@ -177,7 +177,7 @@ namespace AnimalWill
             Console.WriteLine($"StdDev2 = {stdDev2}");
         }
 
-        public static void ShowIntervalsHitRate(Dictionary<int, int> intervalToShow, string intervalName)
+        public static void ShowIntervalsHitRate(Dictionary<int, int> intervalToShow, string intervalName, Dictionary<int, int> winsOfInterval)
         {
             int sumOfTheseSpins = 0;
             foreach (var interval in intervalToShow)
@@ -186,19 +186,30 @@ namespace AnimalWill
             }
             Console.WriteLine($"{intervalName} Intervals Hit Rate (RTP%):");
             Console.WriteLine($"0x: {1 / ((double)intervalToShow.ElementAt(0).Value / sumOfTheseSpins)} (0%)");
+            double RTPofInterval = 0;
             for (int i = 1; i < IntervalTotalWinsX.Count - 1; i++)
             {
+                RTPofInterval = GetSumOfWinsXFromTheInterval(intervalToShow.ElementAt(i).Key, intervalToShow.ElementAt(i + 1).Key, winsOfInterval);
                 Console.WriteLine($"{intervalToShow.ElementAt(i).Key}x - {intervalToShow.ElementAt(i + 1).Key}x: " +
                     $"{1 / ((double)intervalToShow.ElementAt(i).Value / sumOfTheseSpins)} " +
-                    $"({(((intervalToShow.ElementAt(i).Key + intervalToShow.ElementAt(i + 1).Key) / 2.0f) * (double)intervalToShow.ElementAt(i).Value) / sumOfTheseSpins}%)");
+                    $"({Math.Round(RTPofInterval / sumOfTheseSpins * 100, 4)}%)");
             }
-            Console.WriteLine($" > {intervalToShow.ElementAt(intervalToShow.Count - 1).Key}x: {1 / ((double)intervalToShow.ElementAt(IntervalTotalWinsX.Count - 1).Value / sumOfTheseSpins)}");
+            RTPofInterval = GetSumOfWinsXFromTheInterval(intervalToShow.ElementAt(intervalToShow.Count - 1).Key, 999999999, winsOfInterval);
+            Console.WriteLine($" > {intervalToShow.ElementAt(intervalToShow.Count - 1).Key}x: " +
+                $"{1 / ((double)intervalToShow.ElementAt(IntervalTotalWinsX.Count - 1).Value / sumOfTheseSpins)} ({Math.Round(RTPofInterval / sumOfTheseSpins * 100, 4)}%)");
         }
 
-        public static int GetWinFromTheInterval()
+        public static double GetSumOfWinsXFromTheInterval(double leftBoardX, double rightBoardX, Dictionary<int, int> winsOfInterval)
         {
-            int result = 0;
-
+            double result = 0;
+            foreach (var item in winsOfInterval)
+            {
+                if (leftBoardX < item.Key / CostToPlay && item.Key / CostToPlay <= rightBoardX)
+                {
+                    result += item.Key * item.Value;
+                }
+            }
+            result /= CostToPlay;
             return result;
         }
 

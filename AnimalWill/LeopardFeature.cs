@@ -18,7 +18,6 @@ namespace AnimalWill
             FSRoundWin = TableWeightsSelector.GetRandomObjectFromTableWithWeights(LeopardFeatureWinsWeights);
             AddWinXToInterval(FSRoundWin / CostToPlay, IntervalFeaturesSpinWinsX[Leopard]);
             AddWinXToInterval(FSRoundWin / CostToPlay, IntervalFeaturesRoundWinsX[Leopard]);
-            
         }
     }
 }

@@ -50,10 +50,10 @@ namespace AnimalWill
         public static Dictionary<int, List<Symbol>> CurrentBGReels = new Dictionary<int, List<Symbol>>();
         private static Dictionary<Symbol, int> _animalsMeters = new Dictionary<Symbol, int>() { { Lion, 1 }, { Elephant, 1 }, { Leopard, 1 }, { Rhino, 1 }, { WaterBuffalo, 1 } };
         public static Symbol[,] Matrix = new Symbol[SlotHeight, SlotWidth];
-        private Symbol[,] _outerMatrix = new Symbol[SlotHeight, SlotWidth];
+        public static Symbol[,] OuterMatrix = new Symbol[SlotHeight, SlotWidth];
         public static Random Rand = new Random();
         public static List<int> StopPositions = new List<int>() { 0, 0, 0, 0, 0 };
-        private Dictionary<Symbol, int> _animalsWeights = new Dictionary<Symbol, int>() { { Lion, 0 }, { Elephant, 0 }, { Leopard, 0 }, { Rhino, 0 }, { WaterBuffalo, 0 } };
+        public static Dictionary<Symbol, int> AnimalsWeights = new Dictionary<Symbol, int>() { { Lion, 0 }, { Elephant, 0 }, { Leopard, 0 }, { Rhino, 0 }, { WaterBuffalo, 0 } };
 
         public void StartSimulation()
         {
@@ -83,25 +83,28 @@ namespace AnimalWill
             ShowFSTriggerCycle();
             ShowCFTriggerCycle();
             ShowRTPs();
-            ShowStdDev();
+            ShowStdDev(); 
+            Console.WriteLine();
+            ShowFeaturesTriggerCycle();
+            Console.WriteLine();
+            ShowFeaturesRTPs();
+            Console.WriteLine();
+            ShowFeaturesStdDevs();
+            Console.WriteLine(); 
+
+
+            ShowIntervalsHitRate(IntervalTotalWinsX, "Total Wins", WinsPerTotalSpinCount);
 
             ShowCollectorsHits();
             ShowAvgCollectorFeatureWin(); 
             ShowAvgAnimalsCollected();
             ShowSelectedFeaturesAmount();
-            ShowFeaturesTriggerCycle();
 
-            Console.WriteLine();
-            ShowFeaturesRTPs();
-            Console.WriteLine();
-            ShowFeaturesStdDevs();
-            Console.WriteLine();
-            ShowIntervalsHitRate(IntervalTotalWinsX, "Total Wins");
             Console.WriteLine();
             foreach (var item in _animalsMeters.Keys)
             {
                 Console.WriteLine();
-                ShowIntervalsHitRate(IntervalFeaturesRoundWinsX[item], $"{item} Feature Wins Per Round");
+                ShowIntervalsHitRate(IntervalFeaturesRoundWinsX[item], $"{item} Feature Wins Per Round", WinsPerFeatureRound[item]);
                 Console.WriteLine();
             }
         }
@@ -168,6 +171,10 @@ namespace AnimalWill
                 {
                     WaterBuffaloFeature.StartFeature(out FSRoundWin);
                 }
+                else if (selectedSymbol == Rhino)
+                {
+                    RhinoFeature.StartRhinoFreeSpins(out FSRoundWin);
+                }
                 AddWinXToInterval(FSRoundWin / CostToPlay, IntervalFeaturesRoundWinsX[selectedSymbol]);
                 AddWinTo(FSRoundWin, WinsPerFeatureRound[selectedSymbol]);
                 ClearAnimalMeters();
@@ -222,7 +229,7 @@ namespace AnimalWill
             CurrentBGReels = BGReelsSets[i]; 
         }
 
-        private void TurnCollectorsIntoWilds()
+        public static void TurnCollectorsIntoWilds()
         {
             for (int i = 0; i < SlotHeight; i++)
             {
@@ -236,15 +243,15 @@ namespace AnimalWill
             }
         }
 
-        private void RealizeOuterSymbols()
+        public static void RealizeOuterSymbols()
         {
             for (int i = 0; i < SlotHeight; i++)
             {
                 for (int j = 1; j < SlotWidth - 1; j++)
                 {
-                    if (_outerMatrix[i, j] != Blank)
+                    if (OuterMatrix[i, j] != Blank)
                     {
-                        Matrix[i, j] = _outerMatrix[i, j];
+                        Matrix[i, j] = OuterMatrix[i, j];
                     }
                 }
             }
@@ -258,14 +265,14 @@ namespace AnimalWill
             }
         }
 
-        private void GenerateNewOuterMatrix()
+        public static void GenerateNewOuterMatrix()
         {
             GenerateNewStopPositions(OuterReels);
             for (int i = 0; i < SlotWidth; i++)
             {
                 for (int j = 0; j < SlotHeight; j++)
                 {
-                    _outerMatrix[j, i] = OuterReels[i][(StopPositions[i] + j) % OuterReels[i].Count];
+                    OuterMatrix[j, i] = OuterReels[i][(StopPositions[i] + j) % OuterReels[i].Count];
                 }
             }
         }
@@ -300,29 +307,29 @@ namespace AnimalWill
             }
         }
 
-        private int GetCollectorsWin(out int animalsAmount, out Symbol playedSymbol)
+        public static int GetCollectorsWin(out int animalsAmount, out Symbol playedSymbol)
         {
             playedSymbol = GetAnimalFromCollectorsWheel();
             animalsAmount = GetSymbolCountFromMatrix(playedSymbol) + GetSymbolCountFromMatrix(Wild);
             return CollectorsPayTable[animalsAmount];
         }
 
-        private void CalculateAnimalWheelWeights()
+        public static void CalculateAnimalWheelWeights()
         {
-            for (int i = 0; i < _animalsWeights.Count; i++)
+            for (int i = 0; i < AnimalsWeights.Count; i++)
             {
-                var item = _animalsWeights.ElementAt(i);
+                var item = AnimalsWeights.ElementAt(i);
                 int additionalWeight = AnimalsAdditionalWeightsForWheel[item.Key] * GetSymbolCountFromMatrix(item.Key);
                 int startWeight = AnimalsStartWeightsForWheel[item.Key];
-                _animalsWeights[item.Key] = startWeight + additionalWeight;
+                AnimalsWeights[item.Key] = startWeight + additionalWeight;
             }
         }
 
-        private Symbol GetAnimalFromCollectorsWheel()
+        public static Symbol GetAnimalFromCollectorsWheel()
         {
             CalculateAnimalWheelWeights();
             
-            return TableWeightsSelector.GetRandomObjectFromTableWithWeights(_animalsWeights);
+            return TableWeightsSelector.GetRandomObjectFromTableWithWeights(AnimalsWeights);
         }
     }   
 }

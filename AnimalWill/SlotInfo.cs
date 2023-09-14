@@ -57,6 +57,9 @@ namespace AnimalWill
 
                     ImportLeopardFeatureWieghts(workbook.Worksheets["Leopard Feature Weights"]);
 
+                    ImportRhinoReelSet(workbook.Worksheets["Rhino Feature Reels"]);
+                    ImportRhinoInfo(workbook.Worksheets["Rhino Feature Info"]);
+
                     ImportWaterBuffaloReels(workbook.Worksheets["Buffalo Feature Reel Set1"], WaterBuffaloFeature.WaterBuffaloFeatureReels1stSpin);
                     ImportWaterBuffaloReels(workbook.Worksheets["Buffalo Feature Reel Set2"], WaterBuffaloFeature.WaterBuffaloFeatureReels2ndSpin);
                     ImportWaterBuffaloReels(workbook.Worksheets["Buffalo Feature Reel Set3"], WaterBuffaloFeature.WaterBuffaloFeatureReels4thSpin);
@@ -65,6 +68,25 @@ namespace AnimalWill
                 finally
                 {
                     package.Dispose();
+                }
+            }
+        }
+
+        private static void ImportRhinoInfo(ExcelWorksheet worksheet)
+        {
+            RhinoFeature.RhinoSpinsCount = Convert.ToInt32(worksheet.Cells[8, 4].Value);
+            RhinoFeature.ChanceToUseOuterReels = Convert.ToDouble(worksheet.Cells["E5"].Value) / Convert.ToDouble(worksheet.Cells["G5"].Value);
+        }
+
+        private static void ImportRhinoReelSet(ExcelWorksheet worksheet)
+        {
+            int i;
+            for (i = 0; i < SlotWidth; i++)
+            {
+                RhinoFeature.ReelsSet.Add(i, new List<Symbol>());
+                for (int j = 4; worksheet.Cells[j, i + 3].Value != null; j++)
+                {
+                    RhinoFeature.ReelsSet[i].Add(ConvertCellToSymbol(worksheet.Cells[j, i + 3].Value));
                 }
             }
         }
@@ -84,6 +106,10 @@ namespace AnimalWill
                 {
                     reelSet[i].Add(ConvertCellToSymbol(worksheet.Cells[j, i + 3].Value));
                 }
+            }
+            for (int j = 4; worksheet.Cells[j, 8].Value != null; j++)
+            {
+                RhinoFeature.RhinoInnerReel.Add(ConvertCellToSymbol(worksheet.Cells[j, 8].Value));
             }
         }
 
@@ -121,6 +147,10 @@ namespace AnimalWill
                 {
                     LionFeatureReels[i].Add(ConvertCellToSymbol(worksheet.Cells[j, i + 3].Value));
                 }
+            }
+            for (int j = 4; worksheet.Cells[j, 8].Value != null; j++)
+            {
+                LionFeatureInnerReels.Add(ConvertCellToSymbol(worksheet.Cells[j, 8].Value));
             }
         }
 

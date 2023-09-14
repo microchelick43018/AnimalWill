@@ -62,6 +62,7 @@
     <Compile Include="LeopardFeature.cs" />
     <Compile Include="LionFeature.cs" />
     <Compile Include="PaylinesCounter.cs" />
+    <Compile Include="RhinoFeature.cs" />
     <Compile Include="WaterBuffaloFeature.cs" />
     <Compile Include="Simulation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
