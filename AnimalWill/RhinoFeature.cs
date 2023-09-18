@@ -20,15 +20,18 @@ namespace AnimalWill
         public static int RhinoSpinsCount = 0;
         public static int TotalWinPerRound = 0;
         public static double ChanceToUseOuterReels = 0;
+        public static int RetriggerSpinsCount = 0;
         private static Symbol _selectedSymbol;
 
         public static void StartRhinoFreeSpins(out int win)
         {
+            int temp = RhinoSpinsCount;
             TotalWinPerRound = 0;
             for (int i = 0; i < RhinoSpinsCount; i++)
             {
                 MakeASpin();
             }
+            RhinoSpinsCount = temp;
             win = TotalWinPerRound;
         }
 
@@ -54,6 +57,11 @@ namespace AnimalWill
                         collectorsWin += GetCollectorsWin(out int animalsAmount, out Symbol playedSymbol);
                     }
                 }
+            }
+
+            if (GetSymbolCountFromMatrix(Scatter) == 3)
+            {
+                RhinoSpinsCount += RetriggerSpinsCount;
             }
 
             payLinesWin = GetPaylinesWins(Matrix);

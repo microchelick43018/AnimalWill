@@ -18,6 +18,7 @@ namespace AnimalWill
         public static List<Symbol> LionFeatureInnerReels = new List<Symbol>();
         public static Dictionary<Symbol, int> SymbolsToWildsWeights = new Dictionary<Symbol, int>();
         public static int LionSpinsCount;
+        public static int RetriggerSpins = 0;
         public static int TotalWinPerRound = 0;
 
         private static Symbol _selectedSymbol;
@@ -25,11 +26,13 @@ namespace AnimalWill
         public static void StartLionFreeSpins(out int win)
         {
             TotalWinPerRound = 0;
-            SelectWildSymbol();
+            int temp = LionSpinsCount;
             for (int i = 0; i < LionSpinsCount; i++)
             {
+                SelectWildSymbol();
                 MakeASpin();
             }
+            LionSpinsCount = temp;
             win = TotalWinPerRound;
         }
 
@@ -42,6 +45,10 @@ namespace AnimalWill
 
             int totalWinPerSpin = 0;
             int payLinesWin = 0;
+            if (GetSymbolCountFromMatrix(Scatter) == 3)
+            {
+                LionSpinsCount += RetriggerSpins;
+            }
 
             payLinesWin = GetPaylinesWins(Matrix);
             totalWinPerSpin = payLinesWin;

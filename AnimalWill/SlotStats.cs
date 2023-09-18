@@ -52,6 +52,7 @@ namespace AnimalWill
         public static double ScattersRTP = 0;
         public static double CollectorsRTP = 0;
         public static double ConfidenceInterval = 0;
+        public static int SumOfElephantMultipliers = 0;
 
         static SlotStats()
         {
@@ -337,6 +338,18 @@ namespace AnimalWill
             }
             avgWin /= lionSpinsCount;
             Console.WriteLine($"Lion Feature Avg Win Per Spin = {Math.Round(avgWin, 4)}x");
+        }
+
+        public static void ShowAvgMultiplierPerElephantSpin()
+        {
+            double avgMultiplier = 0;
+            int sumOfElephantSpins = 0;
+            foreach (var item in WinsPerFeatureSpin[Elephant])
+            {
+                sumOfElephantSpins += item.Value;
+            }
+            avgMultiplier = (double) SumOfElephantMultipliers / sumOfElephantSpins;
+            Console.WriteLine($"Elephant Feature Avg multiplier = {Math.Round(avgMultiplier, 4)}x");
         }
     }
 }

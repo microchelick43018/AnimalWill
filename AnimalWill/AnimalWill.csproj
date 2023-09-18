@@ -59,6 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ElephantFeature.cs" />
     <Compile Include="LeopardFeature.cs" />
     <Compile Include="LionFeature.cs" />
     <Compile Include="PaylinesCounter.cs" />

@@ -20,7 +20,7 @@ namespace AnimalWill
 
         public static List<Dictionary<int, List<Symbol>>> BGReelsSets = new List<Dictionary<int, List<Symbol>>>();
 
-        public static List<Symbol> _collectorsWheel = new List<Symbol> { Lion, Lion, Elephant, Leopard, Rhino, WaterBuffalo };
+        public static List<Symbol> CollectorsWheel = new List<Symbol> { Lion, Lion, Elephant, Leopard, Rhino, WaterBuffalo };
         public static Dictionary<Symbol, int> AnimalsStartWeightsForWheel = new Dictionary<Symbol, int>();
         public static Dictionary<Symbol, int> AnimalsAdditionalWeightsForWheel = new Dictionary<Symbol, int>();
         public static List<Symbol> InnerReel = new List<Symbol>();
@@ -36,7 +36,7 @@ namespace AnimalWill
         {
             ExcelPackage.LicenseContext = LicenseContext.Commercial;
 
-            using (var package = new ExcelPackage(new FileInfo(@"C:\Users\konstantin.d\source\repos\AnimalWill\AnimalWill\AnimalWillMaths.xlsx")))
+            using (var package = new ExcelPackage(new FileInfo(@"C:\Users\AMD\source\repos\microchelick43018\AnimalWill\AnimalWill\AnimalWillMaths.xlsx")))
             {
                 try
                 {
@@ -55,6 +55,9 @@ namespace AnimalWill
                     ImportLionFeatureReels(workbook.Worksheets["Lion Feature Reels"]);
                     ImportLionFeatureInfo(workbook.Worksheets["Lion Feature Info"]);
 
+                    ImportElephantInfo(workbook.Worksheets["Elephant Feature Info"]);
+                    ImportElephantReelSet(workbook.Worksheets["Elephant Feature Reels"]);
+
                     ImportLeopardFeatureWieghts(workbook.Worksheets["Leopard Feature Weights"]);
 
                     ImportRhinoReelSet(workbook.Worksheets["Rhino Feature Reels"]);
@@ -72,10 +75,38 @@ namespace AnimalWill
             }
         }
 
+        private static void ImportElephantInfo(ExcelWorksheet worksheet)
+        {
+            for (int i = 0; worksheet.Cells[i + 4, 2].Value != null; i++)
+            {
+                ElephantFeature.Multipliers.Add(Convert.ToInt32(worksheet.Cells[i + 4, 2].Value));
+            }
+            ElephantFeature.ChanceToUseOuterReels = (double)Convert.ToInt32(worksheet.Cells[12, 3].Value) / Convert.ToInt32(worksheet.Cells[12, 5].Value);
+            ElephantFeature.FreeSpinsCount = Convert.ToInt32(worksheet.Cells[2, 3].Value);
+        }
+
+        private static void ImportElephantReelSet(ExcelWorksheet worksheet)
+        {
+            int i;
+            for (i = 0; i < SlotWidth; i++)
+            {
+                ElephantFeature.ReelsSet.Add(i, new List<Symbol>());
+                for (int j = 4; worksheet.Cells[j, i + 3].Value != null; j++)
+                {
+                    ElephantFeature.ReelsSet[i].Add(ConvertCellToSymbol(worksheet.Cells[j, i + 3].Value));
+                }
+            }
+            for (int j = 4; worksheet.Cells[j, 8].Value != null; j++)
+            {
+                ElephantFeature.ElephantInnerReel.Add(ConvertCellToSymbol(worksheet.Cells[j, 8].Value));
+            }
+        }
+
         private static void ImportRhinoInfo(ExcelWorksheet worksheet)
         {
             RhinoFeature.RhinoSpinsCount = Convert.ToInt32(worksheet.Cells[8, 4].Value);
             RhinoFeature.ChanceToUseOuterReels = Convert.ToDouble(worksheet.Cells["E5"].Value) / Convert.ToDouble(worksheet.Cells["G5"].Value);
+            RhinoFeature.RetriggerSpinsCount = Convert.ToInt32(worksheet.Cells["D9"].Value);
         }
 
         private static void ImportRhinoReelSet(ExcelWorksheet worksheet)
@@ -89,11 +120,16 @@ namespace AnimalWill
                     RhinoFeature.ReelsSet[i].Add(ConvertCellToSymbol(worksheet.Cells[j, i + 3].Value));
                 }
             }
+            for (int j = 4; worksheet.Cells[j, 8].Value != null; j++)
+            {
+                RhinoFeature.RhinoInnerReel.Add(ConvertCellToSymbol(worksheet.Cells[j, 8].Value));
+            }
         }
 
         private static void ImportWaterBuffaloSpinsCount(ExcelWorksheet worksheet)
         {
             WaterBuffaloFeature.SpinsCount = Convert.ToInt32(worksheet.Cells["D2"].Value);
+            WaterBuffaloFeature.RetriggerSpinsCount = Convert.ToInt32(worksheet.Cells["D3"].Value);
         }
 
         private static void ImportWaterBuffaloReels(ExcelWorksheet worksheet, Dictionary<int, List<Symbol>> reelSet)
@@ -106,10 +142,6 @@ namespace AnimalWill
                 {
                     reelSet[i].Add(ConvertCellToSymbol(worksheet.Cells[j, i + 3].Value));
                 }
-            }
-            for (int j = 4; worksheet.Cells[j, 8].Value != null; j++)
-            {
-                RhinoFeature.RhinoInnerReel.Add(ConvertCellToSymbol(worksheet.Cells[j, 8].Value));
             }
         }
 
@@ -135,6 +167,7 @@ namespace AnimalWill
             {
                 SymbolsToWildsWeights.Add(ConvertCellToSymbol(worksheet.Cells[5 + i, 2].Value), Convert.ToInt32(worksheet.Cells[5 + i, 3].Value));
             }
+            LionFeature.RetriggerSpins = Convert.ToInt32(worksheet.Cells[3, 3].Value);
         }
 
         private static void ImportLionFeatureReels(ExcelWorksheet worksheet)
@@ -165,15 +198,16 @@ namespace AnimalWill
 
         private static void ImportBGReelsWeights(ExcelWorksheet worksheet)
         {
-            BaseGameReelsWeights.Add((double)worksheet.Cells[2, 3].Value / (double)worksheet.Cells[4, 3].Value);
-            BaseGameReelsWeights.Add((double)worksheet.Cells[3, 3].Value / (double)worksheet.Cells[4, 3].Value);
+            BaseGameReelsWeights.Add((double)worksheet.Cells[2, 3].Value / (double)worksheet.Cells[5, 3].Value);
+            BaseGameReelsWeights.Add((double)worksheet.Cells[3, 3].Value / (double)worksheet.Cells[5, 3].Value);
+            BaseGameReelsWeights.Add((double)worksheet.Cells[4, 3].Value / (double)worksheet.Cells[5, 3].Value);
         }
 
         private static void ImportBGReels(ExcelWorkbook workbook)
         {
             string worksheetName = "Base Game Reels ";
             ExcelWorksheet worksheet;
-            for (int worksheetNumber = 1; worksheetNumber <= 2; worksheetNumber++)
+            for (int worksheetNumber = 1; worksheetNumber <= 3; worksheetNumber++)
             {
                 worksheet = workbook.Worksheets[worksheetName + worksheetNumber.ToString()];
                 int i;

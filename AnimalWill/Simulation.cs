@@ -107,6 +107,8 @@ namespace AnimalWill
                 ShowIntervalsHitRate(IntervalFeaturesRoundWinsX[item], $"{item} Feature Wins Per Round", WinsPerFeatureRound[item]);
                 Console.WriteLine();
             }
+
+            ShowAvgMultiplierPerElephantSpin();
         }
 
         public static void GenerateNewMatrix(Dictionary<int, List<Symbol>> reelSet)
@@ -162,6 +164,10 @@ namespace AnimalWill
                 if (selectedSymbol == Lion)
                 {
                     LionFeature.StartLionFreeSpins(out FSRoundWin);
+                }
+                else if (selectedSymbol == Elephant)
+                {
+                    ElephantFeature.StartElephantFreeSpins(out FSRoundWin);
                 }
                 else if (selectedSymbol == Leopard)
                 {

@@ -20,10 +20,12 @@ namespace AnimalWill
         public static Dictionary<int, List<Symbol>> CurrentReelSet = new Dictionary<int, List<Symbol>>();
         public static int SpinsCount = 5;
         public static int TotalWinPerRound = 0;
+        public static int RetriggerSpinsCount = 0;
 
         public static void StartFeature(out int win)
         {
             TotalWinPerRound = 0;
+            int temp = SpinsCount;
             for (int i = 0; i < SpinsCount; i++)
             {
                 if (i == 0)
@@ -40,6 +42,7 @@ namespace AnimalWill
                 }
                 MakeASpin();
             }
+            SpinsCount = temp;
             win = TotalWinPerRound;
         }
 
@@ -50,7 +53,10 @@ namespace AnimalWill
 
             int totalWinPerSpin = 0;
             int payLinesWin = 0;
-
+            if (GetSymbolCountFromMatrix(Scatter) == 3)
+            {
+                SpinsCount += RetriggerSpinsCount;
+            }
             payLinesWin = GetPaylinesWins(Matrix);
             totalWinPerSpin = payLinesWin;
             AddWinTo(totalWinPerSpin, WinsPerFeatureSpin[WaterBuffalo]);
