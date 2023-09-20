@@ -30,7 +30,7 @@ namespace AnimalWill
         };
 
         public static Dictionary<int, int> WinsPerTotalSpinCount = new Dictionary<int, int>();
-        public static Dictionary<int, int> WinsPerBGSpinCount = new Dictionary<int, int>();
+        public static Dictionary<int, int> WinsPerBGOnlySpinCount = new Dictionary<int, int>();
         public static Dictionary<int, int> WinsPerFSRoundCount = new Dictionary<int, int>();
         public static Dictionary<int, int> WinsPer1FSCount = new Dictionary<int, int>();
         public static Dictionary<Symbol, Dictionary<int, int>> WinsPerFeatureSpin = new Dictionary<Symbol, Dictionary<int, int>>();
@@ -48,9 +48,10 @@ namespace AnimalWill
 
         public static double StdDev = 0;
         public static double TotalRTP = 0;
-        public static double PaylinesRTP = 0;
+        public static double BGOnlyRTP = 0;
         public static double ScattersRTP = 0;
         public static double CollectorsRTP = 0;
+        public static double FreeSpinsRTP = 0;
         public static double ConfidenceInterval = 0;
         public static int SumOfElephantMultipliers = 0;
 
@@ -128,12 +129,12 @@ namespace AnimalWill
             }
         }
 
-        public static void CalculatePaylineRTP()
+        public static void CalculateBGOnlyRTP()
         {
-            PaylinesRTP = 0;
-            foreach (var item in PaylineWinsPerSpinCount)
+            BGOnlyRTP = 0;
+            foreach (var item in WinsPerBGOnlySpinCount)
             {
-                PaylinesRTP += (double)item.Key * item.Value / CurrentIteration / CostToPlay;
+                BGOnlyRTP += (double)item.Key * item.Value / CurrentIteration / CostToPlay;
             }
         }
 
@@ -157,25 +158,32 @@ namespace AnimalWill
             CollectorsRTP /= CurrentIteration;
         }
 
+        public static void CalculateFSRTP()
+        {
+            FreeSpinsRTP = 0;
+            foreach (Symbol animal in FeaturesSelectedCount.Keys)
+            {
+                foreach (var item in WinsPerFeatureRound[animal])
+                {
+                    FreeSpinsRTP += item.Value * item.Key / CostToPlay;
+                }
+            }
+
+            FreeSpinsRTP /= CurrentIteration;
+        }
+
         public static void ShowRTPs()
         {
             Console.WriteLine($"Total RTP = {Math.Round(TotalRTP, 4) * 100}%");
             Console.WriteLine($"Scatter RTP = {Math.Round(ScattersRTP, 4) * 100}%");
-            Console.WriteLine($"Paylines only RTP = {Math.Round(PaylinesRTP, 4) * 100}%");
-            Console.WriteLine($"Collectors RTP = {Math.Round(CollectorsRTP, 4) * 100}%");
+            Console.WriteLine($"BG only RTP = {Math.Round(BGOnlyRTP, 4) * 100}%");
+            Console.WriteLine($"FS only RTP = {Math.Round(FreeSpinsRTP, 4) * 100}%");
+            Console.WriteLine($"Collectors RTP BG only = {Math.Round(CollectorsRTP, 4) * 100}%");
         }
 
         public static void ShowStdDev()
         {
             Console.WriteLine($"StdDev = {StdDev}");
-            double stdDev2 = 0;
-            foreach (var item in WinsPerTotalSpinCount)
-            {
-                stdDev2 += (item.Key / CostToPlay * item.Key / CostToPlay) * (double) item.Value / CurrentIteration;
-            }
-            stdDev2 -= TotalRTP * TotalRTP;
-            stdDev2 = Math.Sqrt(stdDev2);
-            Console.WriteLine($"StdDev2 = {stdDev2}");
         }
 
         public static void ShowIntervalsHitRate(Dictionary<int, int> intervalToShow, string intervalName, Dictionary<int, int> winsOfInterval)
@@ -324,20 +332,25 @@ namespace AnimalWill
             }
         }
 
-        public static void ShowAvgWinPerLionSpin()
+        public static void ShowAvgRoundWinXForEachFeature()
         {
-            double avgWin = 0;
-            foreach (var item in WinsPerFeatureSpin[Lion])
+            double avgWinX = 0;
+            foreach (Symbol animal in FeaturesSelectedCount.Keys)
             {
-                avgWin += item.Value * item.Key / CostToPlay;
+                avgWinX = 0;
+                foreach (var item in WinsPerFeatureRound[animal])
+                {
+                    avgWinX += item.Value * item.Key / CostToPlay;
+                }
+                int featureRounds = 0;
+                foreach (var item in WinsPerFeatureRound[animal])
+                {
+                    featureRounds += item.Value;
+                }
+                avgWinX /= featureRounds;
+                Console.WriteLine($"{animal} Feature Avg Win Per Round = {Math.Round(avgWinX, 4)}x");
             }
-            int lionSpinsCount = 0;
-            foreach (var item in WinsPerFeatureSpin[Lion])
-            {
-                lionSpinsCount += item.Value;
-            }
-            avgWin /= lionSpinsCount;
-            Console.WriteLine($"Lion Feature Avg Win Per Spin = {Math.Round(avgWin, 4)}x");
+
         }
 
         public static void ShowAvgMultiplierPerElephantSpin()

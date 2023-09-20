@@ -75,10 +75,11 @@ namespace AnimalWill
             Console.WriteLine($"Iteration: {CurrentIteration}");
             CalculateConfidenceInterval();
             CalculateTotalRTP();
-            CalculatePaylineRTP();
+            CalculateBGOnlyRTP();
             CalculateScattersRTP();
             CalculateStdDev();
             CalculateCollectorsRTP();
+            CalculateFSRTP();
 
             ShowFSTriggerCycle();
             ShowCFTriggerCycle();
@@ -109,6 +110,8 @@ namespace AnimalWill
             }
 
             ShowAvgMultiplierPerElephantSpin();
+            Console.WriteLine();
+            ShowAvgRoundWinXForEachFeature();
         }
 
         public static void GenerateNewMatrix(Dictionary<int, List<Symbol>> reelSet)
@@ -189,6 +192,7 @@ namespace AnimalWill
             totalWin = payLinesWin + scattersWin + collectorsWin + FSRoundWin;
             AddWinTo(payLinesWin, PaylineWinsPerSpinCount);
             AddWinTo(totalWin, WinsPerTotalSpinCount);
+            AddWinTo(totalWin - FSRoundWin, WinsPerBGOnlySpinCount);
             AddWinXToInterval(totalWin / CostToPlay, IntervalTotalWinsX);
         }
 
@@ -239,7 +243,7 @@ namespace AnimalWill
         {
             for (int i = 0; i < SlotHeight; i++)
             {
-                for (int j = 1; j < SlotWidth - 1; j++)
+                for (int j = 0; j < SlotWidth; j++)
                 {
                     if (Matrix[i, j] == Collector)
                     {
@@ -253,7 +257,7 @@ namespace AnimalWill
         {
             for (int i = 0; i < SlotHeight; i++)
             {
-                for (int j = 1; j < SlotWidth - 1; j++)
+                for (int j = 0; j < SlotWidth; j++)
                 {
                     if (OuterMatrix[i, j] != Blank)
                     {
@@ -316,7 +320,7 @@ namespace AnimalWill
         public static int GetCollectorsWin(out int animalsAmount, out Symbol playedSymbol)
         {
             playedSymbol = GetAnimalFromCollectorsWheel();
-            animalsAmount = GetSymbolCountFromMatrix(playedSymbol) + GetSymbolCountFromMatrix(Wild);
+            animalsAmount = GetSymbolCountFromMatrix(playedSymbol);
             return CollectorsPayTable[animalsAmount];
         }
 
