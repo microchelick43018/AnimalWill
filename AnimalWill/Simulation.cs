@@ -45,7 +45,7 @@ namespace AnimalWill
 
     class SlotSimulation
     {
-        public const int IterationsCount = (int)10E7;
+        public const int IterationsCount = (int)2E7;
         public static int CurrentIteration = 0;
         public static Dictionary<int, List<Symbol>> CurrentBGReels = new Dictionary<int, List<Symbol>>();
         private static Dictionary<Symbol, int> _animalsMeters = new Dictionary<Symbol, int>() { { Lion, 1 }, { Elephant, 1 }, { Leopard, 1 }, { Rhino, 1 }, { WaterBuffalo, 1 } };
@@ -112,6 +112,8 @@ namespace AnimalWill
             ShowAvgMultiplierPerElephantSpin();
             Console.WriteLine();
             ShowAvgRoundWinXForEachFeature();
+            Console.WriteLine();
+            ShowAvgFreeSpinsCount();
         }
 
         public static void GenerateNewMatrix(Dictionary<int, List<Symbol>> reelSet)

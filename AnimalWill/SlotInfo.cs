@@ -20,7 +20,7 @@ namespace AnimalWill
 
         public static List<Dictionary<int, List<Symbol>>> BGReelsSets = new List<Dictionary<int, List<Symbol>>>();
 
-        public static List<Symbol> CollectorsWheel = new List<Symbol> { Lion, Lion, Elephant, Leopard, Rhino, WaterBuffalo };
+        public static List<Symbol> CollectorsWheel = new List<Symbol> { Lion, Elephant, Leopard, Rhino, WaterBuffalo };
         public static Dictionary<Symbol, int> AnimalsStartWeightsForWheel = new Dictionary<Symbol, int>();
         public static Dictionary<Symbol, int> AnimalsAdditionalWeightsForWheel = new Dictionary<Symbol, int>();
         public static List<Symbol> InnerReel = new List<Symbol>();
@@ -36,7 +36,7 @@ namespace AnimalWill
         {
             ExcelPackage.LicenseContext = LicenseContext.Commercial;
 
-            using (var package = new ExcelPackage(new FileInfo(@"C:\Users\AMD\source\repos\microchelick43018\AnimalWill\AnimalWill\AnimalWillMaths.xlsx")))
+            using (var package = new ExcelPackage(new FileInfo(@"C:\Users\konstantin.d\source\repos\AnimalWill\AnimalWill\AnimalWillMaths.xlsx")))
             {
                 try
                 {
@@ -83,6 +83,7 @@ namespace AnimalWill
             }
             ElephantFeature.ChanceToUseOuterReels = (double)Convert.ToInt32(worksheet.Cells[12, 3].Value) / Convert.ToInt32(worksheet.Cells[12, 5].Value);
             ElephantFeature.FreeSpinsCount = Convert.ToInt32(worksheet.Cells[2, 3].Value);
+            ElephantFeature.RetriggerSpinsCount = Convert.ToInt32(worksheet.Cells[1, 3].Value);
         }
 
         private static void ImportElephantReelSet(ExcelWorksheet worksheet)
@@ -162,6 +163,7 @@ namespace AnimalWill
 
         private static void ImportLionFeatureInfo(ExcelWorksheet worksheet)
         {
+            LionFeature.ChanceToChooseSelectedAsInner = (double) Convert.ToInt32(worksheet.Cells[12, 4].Value) / Convert.ToInt32(worksheet.Cells[12, 6].Value);
             LionSpinsCount = Convert.ToInt32(worksheet.Cells[2, 3].Value);
             for (int i = 0; i < 5; i++)
             {

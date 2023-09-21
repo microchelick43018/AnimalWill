@@ -16,6 +16,7 @@ namespace AnimalWill
     {
         public static List<int> Multipliers = new List<int>();
         public static int FreeSpinsCount = 0;
+        public static int RetriggerSpinsCount = 0;
         public static Dictionary<int, List<Symbol>> ReelsSet = new Dictionary<int, List<Symbol>>();
         public static List<Symbol> ElephantInnerReel = new List<Symbol>();
         public static int TotalWinPerRound = 0;
@@ -25,6 +26,7 @@ namespace AnimalWill
 
         public static void StartElephantFreeSpins(out int win)
         {
+            int temp = FreeSpinsCount;
             CurrentMultiplierNumber = 0;
             CurrentMultiplier = Multipliers[0];
             TotalWinPerRound = 0;
@@ -32,6 +34,8 @@ namespace AnimalWill
             {
                 MakeASpin();
             }
+            FreeSpinsCountForFeature[Elephant] += FreeSpinsCount;
+            FreeSpinsCount = temp;
             win = TotalWinPerRound;
         }
 
@@ -59,6 +63,11 @@ namespace AnimalWill
                         collectorsWin += GetCollectorsWin(out int animalsAmount, out Symbol playedSymbol);
                     }
                 }
+            }
+
+            if (GetSymbolCountFromMatrix(Scatter) == 3)
+            {
+                FreeSpinsCount += RetriggerSpinsCount;
             }
 
             payLinesWin = GetPaylinesWins(Matrix);

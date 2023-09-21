@@ -31,6 +31,7 @@ namespace AnimalWill
             {
                 MakeASpin();
             }
+            FreeSpinsCountForFeature[Rhino] += RhinoSpinsCount;
             RhinoSpinsCount = temp;
             win = TotalWinPerRound;
         }

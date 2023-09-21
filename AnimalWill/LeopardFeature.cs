@@ -16,6 +16,7 @@ namespace AnimalWill
         public static void RealizeFeature(out int FSRoundWin)
         {
             FSRoundWin = TableWeightsSelector.GetRandomObjectFromTableWithWeights(LeopardFeatureWinsWeights);
+            FreeSpinsCountForFeature[Leopard]++;
             AddWinXToInterval(FSRoundWin / CostToPlay, IntervalFeaturesSpinWinsX[Leopard]);
             AddWinXToInterval(FSRoundWin / CostToPlay, IntervalFeaturesRoundWinsX[Leopard]);
         }

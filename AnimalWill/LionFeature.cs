@@ -20,6 +20,7 @@ namespace AnimalWill
         public static int LionSpinsCount;
         public static int RetriggerSpins = 0;
         public static int TotalWinPerRound = 0;
+        public static double ChanceToChooseSelectedAsInner = 0;
 
         private static Symbol _selectedSymbol;
 
@@ -29,15 +30,16 @@ namespace AnimalWill
             int temp = LionSpinsCount;
             for (int i = 0; i < LionSpinsCount; i++)
             {
-                SelectWildSymbol();
                 MakeASpin();
             }
+            FreeSpinsCountForFeature[Lion] += LionSpinsCount;
             LionSpinsCount = temp;
             win = TotalWinPerRound;
         }
 
         private static void MakeASpin()
         {
+            SelectWildSymbol();
             GenerateNewMatrix(LionFeatureReels);
             RealizeInnerSymbolsInLionFeature();
 
@@ -79,6 +81,14 @@ namespace AnimalWill
         private static void RealizeInnerSymbolsInLionFeature()
         {
             Symbol symbolInsteadInner = LionFeatureInnerReels[Rand.Next(0, LionFeatureInnerReels.Count)];
+            if (Rand.NextDouble() < ChanceToChooseSelectedAsInner)
+            {
+                symbolInsteadInner = _selectedSymbol;
+            }
+            else
+            {
+                symbolInsteadInner = LionFeatureInnerReels[Rand.Next(0, LionFeatureInnerReels.Count)];
+            }
             for (int i = 0; i < SlotHeight; i++)
             {
                 for (int j = 0; j < SlotWidth; j++)

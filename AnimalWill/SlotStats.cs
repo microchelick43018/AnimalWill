@@ -35,13 +35,14 @@ namespace AnimalWill
         public static Dictionary<int, int> WinsPer1FSCount = new Dictionary<int, int>();
         public static Dictionary<Symbol, Dictionary<int, int>> WinsPerFeatureSpin = new Dictionary<Symbol, Dictionary<int, int>>();
         public static Dictionary<int, int> PaylineWinsPerSpinCount = new Dictionary<int, int>();
-        public static List<int> Intervals = new List<int> { -1, 0, 1, 2, 3, 5, 10, 15, 20, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500, 1000 };
+        public static List<int> Intervals = new List<int> { -1, 0, 1, 2, 3, 5, 10, 15, 20, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500, 750, 1000 };
         public static Dictionary<int, int> IntervalTotalWinsX = new Dictionary<int, int>();
         public static Dictionary<Symbol, Dictionary<int, int>> IntervalFeaturesSpinWinsX = new Dictionary<Symbol, Dictionary<int, int>>();
         public static Dictionary<Symbol, Dictionary<int, int>> IntervalFeaturesRoundWinsX = new Dictionary<Symbol, Dictionary<int, int>>();
         public static Dictionary<int, int> CollectorsAmountHits = new Dictionary<int, int>();
         public static Dictionary<Symbol, int> FeaturesSelectedCount = new Dictionary<Symbol, int>() { { Lion, 0 }, { Elephant, 0 }, { Leopard, 0 }, { Rhino, 0 }, { WaterBuffalo, 0 } };
         public static Dictionary<Symbol, Dictionary<int, int>> WinsPerFeatureRound = new Dictionary<Symbol, Dictionary<int, int>>();
+        public static Dictionary<Symbol, int> FreeSpinsCountForFeature = new Dictionary<Symbol, int>() { { Lion, 0 }, { Elephant, 0 }, { Leopard, 0 }, { Rhino, 0 }, { WaterBuffalo, 0 } };
 
         public static int FSTriggersCount = 0;
         public static int CollectFeatureTriggersCount = 0;
@@ -125,8 +126,9 @@ namespace AnimalWill
             TotalRTP = 0;
             foreach (var item in WinsPerTotalSpinCount)
             {
-                TotalRTP += (double)item.Key * item.Value / CurrentIteration / CostToPlay;
+                TotalRTP += (double)item.Key * item.Value;
             }
+            TotalRTP /= CurrentIteration * CostToPlay;
         }
 
         public static void CalculateBGOnlyRTP()
@@ -183,6 +185,24 @@ namespace AnimalWill
 
         public static void ShowStdDev()
         {
+            double stdDev2 = 0;
+            double controlChance = 0;
+            foreach (var item in WinsPerTotalSpinCount)
+            {
+                stdDev2 += ((double) item.Value / CurrentIteration) * (item.Key / CostToPlay - TotalRTP) * (item.Key / CostToPlay - TotalRTP);
+                controlChance += (double) item.Value / CurrentIteration;
+            }
+            //stdDev2 = Math.Sqrt(stdDev2);
+            Console.WriteLine($"Control chance = {controlChance}");
+            Console.WriteLine($"StdDev2 = {Math.Round(stdDev2, 6)}");
+            double dispa = 0;
+            foreach (var item in WinsPerTotalSpinCount)
+            {
+                double slagaemoe = (item.Key / CostToPlay - TotalRTP) * (item.Key / CostToPlay - TotalRTP) * item.Value;
+                dispa += slagaemoe;
+            }
+            dispa /= CurrentIteration;
+            //StdDev = Math.Pow(dispa, 0.5f);
             Console.WriteLine($"StdDev = {StdDev}");
         }
 
@@ -318,18 +338,25 @@ namespace AnimalWill
         public static void ShowFeaturesStdDevs()
         {
             double stdDev = 0;
+            double sumStdDevs = 0;
             foreach (Symbol animal in FeaturesSelectedCount.Keys)
             {
                 stdDev = 0;
                 foreach (var item in WinsPerFeatureRound[animal])
                 {
-                    stdDev += item.Value * (item.Key * item.Key / CostToPlay / CostToPlay);
+                    stdDev += ((double)item.Value / CurrentIteration) * (item.Key / CostToPlay - TotalRTP) * (item.Key / CostToPlay - TotalRTP);
                 }
-                stdDev /= CurrentIteration;
-                stdDev -= TotalRTP * TotalRTP;
-                stdDev = Math.Sqrt(stdDev);
+                //foreach (var item in WinsPerFeatureRound[animal])
+                //{
+                //    stdDev += item.Value * (item.Key * item.Key / (CostToPlay * CostToPlay));
+                //}
+                //stdDev /= CurrentIteration;
+                //stdDev -= TotalRTP * TotalRTP;
+                //stdDev = Math.Sqrt(stdDev);
                 Console.WriteLine($"{animal} Feature StdDev = {Math.Round(stdDev, 6)}");
+                sumStdDevs += stdDev;
             }
+            Console.WriteLine($"Sum of std devs features = {sumStdDevs}");
         }
 
         public static void ShowAvgRoundWinXForEachFeature()
@@ -363,6 +390,22 @@ namespace AnimalWill
             }
             avgMultiplier = (double) SumOfElephantMultipliers / sumOfElephantSpins;
             Console.WriteLine($"Elephant Feature Avg multiplier = {Math.Round(avgMultiplier, 4)}x");
+        }
+
+        public static void ShowAvgFreeSpinsCount()
+        {
+            double avgFreeSpins = 0;
+            int sumOfFreeSpins = 0;
+            foreach (var item in CollectorsWheel)
+            {
+                sumOfFreeSpins = 0;
+                foreach (var winsAndSpins in WinsPerFeatureRound[item])
+                {
+                    sumOfFreeSpins += winsAndSpins.Value;
+                }
+                avgFreeSpins = (double) FreeSpinsCountForFeature[item] / sumOfFreeSpins;
+                Console.WriteLine($"Avg free spins for {item} feature = {Math.Round(avgFreeSpins, 4)}");
+            }
         }
     }
 }

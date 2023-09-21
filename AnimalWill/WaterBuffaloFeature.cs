@@ -42,6 +42,7 @@ namespace AnimalWill
                 }
                 MakeASpin();
             }
+            FreeSpinsCountForFeature[WaterBuffalo] += SpinsCount;
             SpinsCount = temp;
             win = TotalWinPerRound;
         }
