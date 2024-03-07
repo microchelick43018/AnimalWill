@@ -185,16 +185,6 @@ namespace AnimalWill
 
         public static void ShowStdDev()
         {
-            double stdDev2 = 0;
-            double controlChance = 0;
-            foreach (var item in WinsPerTotalSpinCount)
-            {
-                stdDev2 += ((double) item.Value / CurrentIteration) * (item.Key / CostToPlay - TotalRTP) * (item.Key / CostToPlay - TotalRTP);
-                controlChance += (double) item.Value / CurrentIteration;
-            }
-            //stdDev2 = Math.Sqrt(stdDev2);
-            Console.WriteLine($"Control chance = {controlChance}");
-            Console.WriteLine($"StdDev2 = {Math.Round(stdDev2, 6)}");
             double dispa = 0;
             foreach (var item in WinsPerTotalSpinCount)
             {

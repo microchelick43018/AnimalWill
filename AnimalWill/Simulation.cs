@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using static AnimalWill.Symbol;
 using static AnimalWill.SlotInfo;
-using static AnimalWill.SlotSimulation;
 using static AnimalWill.SlotStats;
 using static AnimalWill.PaylinesCounter;
 using System.Linq;
