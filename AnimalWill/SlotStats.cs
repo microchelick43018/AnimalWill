@@ -35,12 +35,13 @@ namespace AnimalWill
         public static Dictionary<int, int> WinsPer1FSCount = new Dictionary<int, int>();
         public static Dictionary<Symbol, Dictionary<int, int>> WinsPerFeatureSpin = new Dictionary<Symbol, Dictionary<int, int>>();
         public static Dictionary<int, int> PaylineWinsPerSpinCount = new Dictionary<int, int>();
-        public static List<int> Intervals = new List<int> { -1, 0, 1, 2, 3, 5, 10, 15, 20, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500, 750, 1000 };
+        public static List<int> Intervals = new List<int> { -1, 0, 1, 2, 3, 5, 10, 15, 20, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 2500, 5000, 10000 };
         public static Dictionary<int, int> IntervalTotalWinsX = new Dictionary<int, int>();
         public static Dictionary<Symbol, Dictionary<int, int>> IntervalFeaturesSpinWinsX = new Dictionary<Symbol, Dictionary<int, int>>();
         public static Dictionary<Symbol, Dictionary<int, int>> IntervalFeaturesRoundWinsX = new Dictionary<Symbol, Dictionary<int, int>>();
         public static Dictionary<int, int> CollectorsAmountHits = new Dictionary<int, int>();
         public static Dictionary<Symbol, int> FeaturesSelectedCount = new Dictionary<Symbol, int>() { { Lion, 0 }, { Elephant, 0 }, { Leopard, 0 }, { Rhino, 0 }, { WaterBuffalo, 0 } };
+        public static Dictionary<Symbol, int> SymbolsCollected = new Dictionary<Symbol, int>() { { Lion, 0 }, { Elephant, 0 }, { Leopard, 0 }, { Rhino, 0 }, { WaterBuffalo, 0 } };
         public static Dictionary<Symbol, Dictionary<int, int>> WinsPerFeatureRound = new Dictionary<Symbol, Dictionary<int, int>>();
         public static Dictionary<Symbol, int> FreeSpinsCountForFeature = new Dictionary<Symbol, int>() { { Lion, 0 }, { Elephant, 0 }, { Leopard, 0 }, { Rhino, 0 }, { WaterBuffalo, 0 } };
 
@@ -55,6 +56,8 @@ namespace AnimalWill
         public static double FreeSpinsRTP = 0;
         public static double ConfidenceInterval = 0;
         public static int SumOfElephantMultipliers = 0;
+
+        public static int MaxWin = 0;
 
         static SlotStats()
         {
@@ -183,6 +186,28 @@ namespace AnimalWill
             Console.WriteLine($"Collectors RTP BG only = {Math.Round(CollectorsRTP, 4) * 100}%");
         }
 
+        public static void ShowAvgSymbolsCollectedPerFSTrigger()
+        {
+            Console.WriteLine($"Avg symbols collected per FS trigger");
+            foreach (var item in AnimalsWeights.Keys)
+            {
+                Console.WriteLine($"{item} - {SymbolsCollected[item] / (double)FeaturesSelectedCount[item]}");
+            }
+        }
+
+        public static void ShowMaxWin()
+        {
+            MaxWin = 0;
+            foreach (var item in WinsPerTotalSpinCount.Keys)
+            {
+                if (MaxWin < item)
+                {
+                    MaxWin = item;
+                }
+            }
+            Console.WriteLine($"Max Win = {MaxWin / CostToPlay}x");
+        }
+
         public static void ShowStdDev()
         {
             double dispa = 0;
@@ -198,11 +223,11 @@ namespace AnimalWill
 
         public static void ShowIntervalsHitRate(Dictionary<int, int> intervalToShow, string intervalName, Dictionary<int, int> winsOfInterval)
         {
-            int sumOfTheseSpins = 0;
-            foreach (var interval in intervalToShow)
-            {
-                sumOfTheseSpins += interval.Value;
-            }
+            int sumOfTheseSpins = CurrentIteration;
+            //foreach (var interval in intervalToShow)
+            //{
+            //    sumOfTheseSpins += interval.Value;
+            //}
             Console.WriteLine($"{intervalName} Intervals Hit Rate (RTP%):");
             Console.WriteLine($"0x: {1 / ((double)intervalToShow.ElementAt(0).Value / sumOfTheseSpins)} (0%)");
             double RTPofInterval = 0;
@@ -325,7 +350,7 @@ namespace AnimalWill
             }
         }
 
-        public static void ShowFeaturesStdDevs()
+        public static void ShowFeaturesVarianceDevs()
         {
             double stdDev = 0;
             double sumStdDevs = 0;
@@ -343,10 +368,10 @@ namespace AnimalWill
                 //stdDev /= CurrentIteration;
                 //stdDev -= TotalRTP * TotalRTP;
                 //stdDev = Math.Sqrt(stdDev);
-                Console.WriteLine($"{animal} Feature StdDev = {Math.Round(stdDev, 6)}");
+                Console.WriteLine($"{animal} Feature Variance = {Math.Round(stdDev, 6)}");
                 sumStdDevs += stdDev;
             }
-            Console.WriteLine($"Sum of std devs features = {sumStdDevs}");
+            Console.WriteLine($"Sum of variances features = {sumStdDevs}");
         }
 
         public static void ShowAvgRoundWinXForEachFeature()

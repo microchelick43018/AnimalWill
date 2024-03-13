@@ -21,7 +21,6 @@ namespace AnimalWill
         public static int TotalWinPerRound = 0;
         public static double ChanceToUseOuterReels = 0;
         public static int RetriggerSpinsCount = 0;
-        private static Symbol _selectedSymbol;
 
         public static void StartRhinoFreeSpins(out int win)
         {

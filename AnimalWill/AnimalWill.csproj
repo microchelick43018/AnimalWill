@@ -72,6 +72,7 @@
     <Compile Include="TableWeightsSelector.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AnimalWillMaths.xlsx" />
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>

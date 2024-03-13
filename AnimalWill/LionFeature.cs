@@ -20,7 +20,7 @@ namespace AnimalWill
         public static int LionSpinsCount;
         public static int RetriggerSpins = 0;
         public static int TotalWinPerRound = 0;
-        public static double ChanceToChooseSelectedAsInner = 0;
+        public static double ChanceToChooseSelectedAsInner;
 
         private static Symbol _selectedSymbol;
 

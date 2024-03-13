@@ -44,7 +44,8 @@ namespace AnimalWill
 
     class SlotSimulation
     {
-        public const int IterationsCount = (int)2E7;
+        public const int IterationsCount = (int)2E9;
+        public const int MaxSymbolsPerMeter = 20;
         public static int CurrentIteration = 0;
         public static Dictionary<int, List<Symbol>> CurrentBGReels = new Dictionary<int, List<Symbol>>();
         private static Dictionary<Symbol, int> _animalsMeters = new Dictionary<Symbol, int>() { { Lion, 1 }, { Elephant, 1 }, { Leopard, 1 }, { Rhino, 1 }, { WaterBuffalo, 1 } };
@@ -56,7 +57,7 @@ namespace AnimalWill
 
         public void StartSimulation()
         {
-            int intervalToUpdateStats = (int) 10E5;
+            int intervalToUpdateStats = (int) 20E5;
             for (CurrentIteration = 0; CurrentIteration <= IterationsCount; CurrentIteration++)
             {
                 MakeASpin();
@@ -83,17 +84,22 @@ namespace AnimalWill
             ShowFSTriggerCycle();
             ShowCFTriggerCycle();
             ShowRTPs();
-            ShowStdDev(); 
+            ShowStdDev();
+            ShowMaxWin();
+            Console.WriteLine(); 
+            ShowAvgSymbolsCollectedPerFSTrigger();
             Console.WriteLine();
             ShowFeaturesTriggerCycle();
             Console.WriteLine();
             ShowFeaturesRTPs();
             Console.WriteLine();
-            ShowFeaturesStdDevs();
+            ShowFeaturesVarianceDevs();
             Console.WriteLine(); 
 
 
             ShowIntervalsHitRate(IntervalTotalWinsX, "Total Wins", WinsPerTotalSpinCount);
+            Console.WriteLine();
+            ShowIntervalsHitRate(IntervalTotalWinsX, "Base Game Wins", WinsPerBGOnlySpinCount);
 
             ShowCollectorsHits();
             ShowAvgCollectorFeatureWin(); 
@@ -145,16 +151,15 @@ namespace AnimalWill
                 GenerateNewOuterMatrix();
                 RealizeOuterSymbols();
                 int collectorsCount = GetSymbolCountFromMatrix(Collector);
-                if (collectorsCount != 0)
+                for (int i = 0; i < collectorsCount; i++)
                 {
-                    for (int i = 0; i < collectorsCount; i++)
-                    {
-                        CollectFeatureTriggersCount++;
-                        TurnCollectorsIntoWilds();
-                        collectorsWin += GetCollectorsWin(out int animalsAmount, out Symbol playedSymbol);
-                        _animalsMeters[playedSymbol] += animalsAmount;
-                        CollectorsAmountHits[animalsAmount]++;
-                    }
+                    CollectFeatureTriggersCount++;
+                    TurnCollectorsIntoWilds();
+                    collectorsWin += GetCollectorsWin(out int animalsAmount, out Symbol playedSymbol);
+                    CollectorsAmountHits[animalsAmount]++;
+                    animalsAmount = Math.Min(animalsAmount, MaxSymbolsPerMeter - _animalsMeters[playedSymbol]);
+                    SymbolsCollected[playedSymbol] += animalsAmount;
+                    _animalsMeters[playedSymbol] += animalsAmount;
                 }
             }
 

@@ -17,65 +17,61 @@ namespace AnimalWill
         public static int GetPaylinesWins(Symbol[,] matrix)
         {
             int paylinesTotalWin = 0;
-            int wildsInARow = 0;
-            int substitutesSymbolsInARow = 0;
+            int substitutesOtherSymbolInAPayline = 0;
+            int substitutesWildInAPayline = 0;
             int wildsWin = 0;
             int otherSymbolWin = 0;
             Symbol winSymbol;
             foreach (var payline in Paylines.Values)
             {
-                wildsInARow = 0;
-                substitutesSymbolsInARow = 0;
+                substitutesOtherSymbolInAPayline = 0;
+                substitutesWildInAPayline = 0;
                 wildsWin = 0;
                 otherSymbolWin = 0;
-
-                wildsInARow = CountWildsInARow(payline, matrix);
-
-                if (wildsInARow != 0)
-                    wildsWin = PayTable[Wild][wildsInARow - 1];
-
-                if (TryGetWinSymbolExceptWild(payline, matrix, out winSymbol) == false)
-                {
-                    winSymbol = Wild;
-                }
-                else if (winSymbol != Scatter && winSymbol != Collector)
-                {
-                    substitutesSymbolsInARow = CountSubsituteSymbolsInARow(payline, matrix, winSymbol);
-                    otherSymbolWin = PayTable[winSymbol][substitutesSymbolsInARow - 1];
-                }
-                if (wildsWin != 0 || otherSymbolWin != 0)
+                TryGetWinSymbolExceptWild(payline, matrix, out winSymbol);
+                if (winSymbol != Collector && winSymbol != Scatter)
+                    otherSymbolWin = GetSymbolWin(payline, matrix, winSymbol, out substitutesOtherSymbolInAPayline);
+                wildsWin = GetSymbolWin(payline, matrix, Wild, out substitutesWildInAPayline);
+                if (wildsWin + otherSymbolWin != 0)
                 {
                     if (wildsWin >= otherSymbolWin)
                     {
-                        SymbolsHitsCount[Wild][wildsInARow - 1]++;
+                        SymbolsHitsCount[Wild][substitutesWildInAPayline - 1]++;
                         paylinesTotalWin += wildsWin;
                     }
                     else
                     {
-                        SymbolsHitsCount[winSymbol][substitutesSymbolsInARow - 1]++;
                         paylinesTotalWin += otherSymbolWin;
+                        SymbolsHitsCount[winSymbol][substitutesOtherSymbolInAPayline - 1]++;
                     }
                 }
             }
             return paylinesTotalWin;
         }
 
-        private static int CountWildsInARow(List<int> payline, Symbol[,] matrix)
+        private static int GetSymbolWin(List<int> payline, Symbol[,] matrix, Symbol symbol, out int symbolAmount)
         {
-            int result = 0;
+            symbolAmount = 0;
             for (int i = 0; i < SlotWidth; i++)
             {
-                if (matrix[payline[i], i] == Wild)
-                    result++;
+                if (matrix[payline[i], i] == Wild || matrix[payline[i], i] == symbol)
+                {
+                    symbolAmount++;
+                }
                 else
+                {
                     break;
+                }
             }
-            return result;
+            if (symbolAmount == 0)
+                return 0;
+            return PayTable[symbol][symbolAmount - 1];
         }
+
         private static bool TryGetWinSymbolExceptWild(List<int> payline, Symbol[,] matrix, out Symbol winSymbol)
         {
             bool winSymbolIsNotWild = false;
-            winSymbol = default;
+            winSymbol = Wild;
             for (int i = 0; i < SlotWidth; i++)
             {
                 if (matrix[payline[i], i] != Wild)
@@ -86,19 +82,6 @@ namespace AnimalWill
                 }
             }
             return winSymbolIsNotWild;
-        }
-
-        private static int CountSubsituteSymbolsInARow(List<int> payline, Symbol[,] matrix, Symbol symbolToSubstitute)
-        {
-            int result = 0;
-            for (int i = 0; i < SlotWidth; i++)
-            {
-                if (matrix[payline[i], i] == Wild || matrix[payline[i], i] == symbolToSubstitute)
-                    result++;
-                else
-                    break;
-            }
-            return result;
         }
 
         public static void RealizeInnerSymbols()

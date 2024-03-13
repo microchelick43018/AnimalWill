@@ -14,7 +14,7 @@ namespace AnimalWill
 {
     static class SlotInfo
     {
-        public const double CostToPlay = 70;
+        public const double CostToPlay = 50;
         public const int SlotWidth = 5;
         public const int SlotHeight = 4;
 
@@ -36,7 +36,7 @@ namespace AnimalWill
         {
             ExcelPackage.LicenseContext = LicenseContext.Commercial;
 
-            using (var package = new ExcelPackage(new FileInfo(@"C:\Users\konstantin.d\source\repos\AnimalWill\AnimalWill\AnimalWillMaths.xlsx")))
+            using (var package = new ExcelPackage(new FileInfo(@"AnimalWillMaths.xlsx")))
             {
                 try
                 {
@@ -205,13 +205,13 @@ namespace AnimalWill
             BaseGameReelsWeights.Add((double)worksheet.Cells[4, 3].Value / (double)worksheet.Cells[5, 3].Value);
         }
 
-        private static void ImportBGReels(ExcelWorkbook workbook)
+        private static void ImportBGReels(ExcelWorkbook Workbook)
         {
             string worksheetName = "Base Game Reels ";
             ExcelWorksheet worksheet;
             for (int worksheetNumber = 1; worksheetNumber <= 3; worksheetNumber++)
             {
-                worksheet = workbook.Worksheets[worksheetName + worksheetNumber.ToString()];
+                worksheet = Workbook.Worksheets[worksheetName + worksheetNumber.ToString()];
                 int i;
                 BGReelsSets.Add(new Dictionary<int, List<Symbol>>());
                 for (i = 0; i < SlotWidth; i++)
