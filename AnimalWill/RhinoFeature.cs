@@ -49,13 +49,10 @@ namespace AnimalWill
                 GenerateNewOuterMatrix();
                 RealizeOuterSymbols();
                 int collectorsCount = GetSymbolCountFromMatrix(Collector);
-                if (collectorsCount != 0)
+                TurnCollectorsIntoWilds();
+                for (int i = 0; i < collectorsCount * 2; i++)
                 {
-                    TurnCollectorsIntoWilds();
-                    for (int i = 0; i < collectorsCount * 2; i++)
-                    {
-                        collectorsWin += GetCollectorsWin(out int animalsAmount, out Symbol playedSymbol);
-                    }
+                    collectorsWin += GetCollectorsWin(out int animalsAmount, out Symbol playedSymbol);
                 }
             }
 
